@@ -6,6 +6,7 @@ import com.example.familymanage.dto.AssetQuery;
 import com.example.familymanage.dto.AssetSummary;
 import com.example.familymanage.dto.StockChangeRequest;
 import com.example.familymanage.entity.FamilyAsset;
+import com.example.familymanage.security.RequirePermission;
 import com.example.familymanage.service.FamilyAssetService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,41 +31,49 @@ public class FamilyAssetController {
     }
 
     @GetMapping
+    @RequirePermission("asset:view")
     public ApiResponse<IPage<FamilyAsset>> list(AssetQuery query) {
         return ApiResponse.ok(familyAssetService.queryAssets(query));
     }
 
     @GetMapping("/summary")
+    @RequirePermission("asset:view")
     public ApiResponse<AssetSummary> summary() {
         return ApiResponse.ok(familyAssetService.getSummary());
     }
 
     @GetMapping("/options")
+    @RequirePermission("asset:view")
     public ApiResponse<Map<String, Object>> options() {
         return ApiResponse.ok(familyAssetService.getOptions());
     }
 
     @GetMapping("/{id}")
+    @RequirePermission("asset:view")
     public ApiResponse<FamilyAsset> get(@PathVariable Long id) {
         return ApiResponse.ok(familyAssetService.getById(id));
     }
 
     @PostMapping
+    @RequirePermission("asset:create")
     public ApiResponse<FamilyAsset> create(@RequestBody FamilyAsset asset) {
         return ApiResponse.ok(familyAssetService.createAsset(asset));
     }
 
     @PutMapping("/{id}")
+    @RequirePermission("asset:update")
     public ApiResponse<FamilyAsset> update(@PathVariable Long id, @RequestBody FamilyAsset asset) {
         return ApiResponse.ok(familyAssetService.updateAsset(id, asset));
     }
 
     @PatchMapping("/{id}/stock")
+    @RequirePermission("asset:update")
     public ApiResponse<FamilyAsset> changeStock(@PathVariable Long id, @RequestBody StockChangeRequest request) {
         return ApiResponse.ok(familyAssetService.changeStock(id, request.getDelta()));
     }
 
     @DeleteMapping("/{id}")
+    @RequirePermission("asset:delete")
     public ApiResponse<Boolean> delete(@PathVariable Long id) {
         return ApiResponse.ok(familyAssetService.removeById(id));
     }

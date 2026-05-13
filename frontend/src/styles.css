@@ -67,6 +67,12 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+  transform: none !important;
+}
+
 /* ───── Keyframes ───── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(18px); }
@@ -238,6 +244,23 @@ button {
   color: var(--ink-ghost);
   font-size: 12.5px;
   font-weight: 500;
+}
+
+.side-logout {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sidebar-text);
+  font-weight: 700;
+  transition: all 0.25s var(--ease-out);
+}
+
+.side-logout:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
 }
 
 /* ───── Workspace ───── */
@@ -417,7 +440,8 @@ button {
 
 .search-box input,
 .form-grid input,
-.form-grid textarea {
+.form-grid textarea,
+.form-grid select {
   width: 100%;
   border: none;
   background: transparent;
@@ -484,6 +508,18 @@ button {
   border-color: var(--terracotta);
   color: var(--terracotta);
   transform: translateY(-1px);
+}
+
+.ghost-btn.mini {
+  min-height: 34px;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  box-shadow: none;
+}
+
+.danger-text {
+  color: var(--rose);
 }
 
 /* ───── Asset Grid ───── */
@@ -789,7 +825,8 @@ button {
 }
 
 .form-grid input,
-.form-grid textarea {
+.form-grid textarea,
+.form-grid select {
   min-height: 44px;
   padding: 10px 14px;
   color: var(--ink);
@@ -802,7 +839,8 @@ button {
 }
 
 .form-grid input:focus,
-.form-grid textarea:focus {
+.form-grid textarea:focus,
+.form-grid select:focus {
   outline: none;
   border-color: var(--terracotta);
   background: var(--card-bg);
@@ -820,6 +858,181 @@ button {
 
 .form-grid .wide {
   grid-column: 1 / -1;
+}
+
+.form-error {
+  color: var(--rose);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.checkbox-line {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center;
+  gap: 10px !important;
+}
+
+.checkbox-line input {
+  width: auto;
+  min-height: auto;
+}
+
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border: 1px solid var(--parchment);
+  border-radius: 12px;
+  background: var(--cream);
+  padding: 12px;
+}
+
+.check-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.check-grid input {
+  width: auto;
+  min-height: auto;
+  accent-color: var(--terracotta);
+}
+
+.permission-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-height: 260px;
+  overflow: auto;
+}
+
+/* Login */
+.login-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse 80% 50% at 80% -10%, rgba(196, 85, 58, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 20% 100%, rgba(91, 140, 90, 0.06), transparent),
+    var(--cream);
+}
+
+.login-card {
+  width: min(420px, 100%);
+  border-radius: 20px;
+  background: var(--card-bg);
+  padding: 34px;
+  box-shadow: 0 30px 80px rgba(28, 22, 16, 0.12), var(--card-shadow);
+  animation: scaleIn 0.35s var(--ease-spring) both;
+}
+
+.login-brand {
+  border-bottom: 0;
+  margin: 0 0 24px;
+  padding: 0;
+}
+
+.login-brand strong {
+  color: var(--ink);
+}
+
+.login-card h1 {
+  margin: 0 0 24px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 34px;
+}
+
+.login-card label {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--ink-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.login-card input {
+  min-height: 46px;
+  border: 1px solid var(--parchment);
+  border-radius: 12px;
+  background: var(--cream);
+  color: var(--ink);
+  padding: 0 14px;
+  outline: none;
+}
+
+.login-card input:focus {
+  border-color: var(--terracotta);
+  background: var(--card-bg);
+  box-shadow: 0 0 0 3px var(--terracotta-glow);
+}
+
+.login-card .primary-btn {
+  width: 100%;
+  margin-top: 22px;
+}
+
+.login-hint {
+  display: block;
+  margin-top: 14px;
+  color: var(--ink-ghost);
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Admin */
+.admin-page {
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+
+.admin-table {
+  overflow: auto;
+  margin-top: 34px;
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.admin-table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.admin-table th,
+.admin-table td {
+  border-bottom: 1px solid var(--linen);
+  padding: 16px 18px;
+  color: var(--ink-soft);
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.admin-table th {
+  background: var(--cream);
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table td:last-child {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .form-actions {

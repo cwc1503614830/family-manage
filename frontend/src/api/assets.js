@@ -1,17 +1,4 @@
-import axios from 'axios'
-
-const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 8000
-})
-
-function unwrap(response) {
-  const body = response.data
-  if (body && body.code !== 200) {
-    throw new Error(body.message || '接口请求失败')
-  }
-  return body ? body.data : null
-}
+import { http, unwrap } from './http'
 
 export function listAssets(params) {
   return http.get('/assets', { params }).then(unwrap)

@@ -10,4 +10,14 @@ public class GlobalExceptionHandler {
     public ApiResponse<Void> handleException(Exception exception) {
         return ApiResponse.fail(exception.getMessage());
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ApiResponse<Void> handleUnauthorized(UnauthorizedException exception) {
+        return ApiResponse.fail(401, exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ApiResponse<Void> handleForbidden(ForbiddenException exception) {
+        return ApiResponse.fail(403, exception.getMessage());
+    }
 }
