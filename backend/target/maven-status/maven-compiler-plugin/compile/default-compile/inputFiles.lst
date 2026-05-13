@@ -1,0 +1,14 @@
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\FamilyManageApplication.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\config\WebConfig.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\service\impl\FamilyAssetServiceImpl.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\common\ApiResponse.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\config\DatabaseInitializer.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\service\FamilyAssetService.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\dto\AssetSummary.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\common\GlobalExceptionHandler.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\dto\AssetQuery.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\controller\FamilyAssetController.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\entity\FamilyAsset.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\dto\StockChangeRequest.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\mapper\FamilyAssetMapper.java
+D:\work\project\test\family-manage\backend\src\main\java\com\example\familymanage\config\MybatisPlusConfig.java
