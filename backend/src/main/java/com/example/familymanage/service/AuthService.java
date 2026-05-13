@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,19 +119,69 @@ public class AuthService {
 
     private List<Map<String, Object>> loadVisibleMenus(Set<String> permissions) {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id, name, code, icon FROM sys_menu WHERE visible = 1 ORDER BY sort_no, id");
-        List<Map<String, Object>> menus = new ArrayList<Map<String, Object>>();
+                "SELECT id, parent_id, name, code, icon, path, component, web_url FROM sys_menu "
+                        + "WHERE visible = 1 ORDER BY sort_no, id");
+        Map<Long, Map<String, Object>> menuMap = new LinkedHashMap<Long, Map<String, Object>>();
         for (Map<String, Object> row : rows) {
             if (permissions.contains(String.valueOf(row.get("code")))) {
-                Map<String, Object> menu = new HashMap<String, Object>();
-                menu.put("id", row.get("id"));
-                menu.put("name", row.get("name"));
-                menu.put("code", row.get("code"));
-                menu.put("icon", row.get("icon"));
-                menus.add(menu);
+                Long id = ((Number) row.get("id")).longValue();
+                menuMap.put(id, toMenu(row));
             }
         }
-        return menus;
+        for (Map<String, Object> row : rows) {
+            Object parentValue = row.get("parent_id");
+            if (parentValue != null) {
+                Long parentId = ((Number) parentValue).longValue();
+                Long id = ((Number) row.get("id")).longValue();
+                if (menuMap.containsKey(id) && !menuMap.containsKey(parentId)) {
+                    Map<String, Object> parent = findMenu(rows, parentId);
+                    if (parent != null) {
+                        menuMap.put(parentId, toMenu(parent));
+                    }
+                }
+            }
+        }
+        List<Map<String, Object>> roots = new ArrayList<Map<String, Object>>();
+        for (Map<String, Object> row : rows) {
+            Long id = ((Number) row.get("id")).longValue();
+            if (!menuMap.containsKey(id)) {
+                continue;
+            }
+            Map<String, Object> menu = menuMap.get(id);
+            Object parentValue = menu.get("parentId");
+            if (parentValue == null || !menuMap.containsKey(((Number) parentValue).longValue())) {
+                roots.add(menu);
+            } else {
+                Map<String, Object> parent = menuMap.get(((Number) parentValue).longValue());
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> children = (List<Map<String, Object>>) parent.get("children");
+                children.add(menu);
+            }
+        }
+        return roots;
+    }
+
+    private Map<String, Object> toMenu(Map<String, Object> row) {
+        Map<String, Object> menu = new HashMap<String, Object>();
+        menu.put("id", row.get("id"));
+        menu.put("parentId", row.get("parent_id"));
+        menu.put("name", row.get("name"));
+        menu.put("code", row.get("code"));
+        menu.put("icon", row.get("icon"));
+        menu.put("path", row.get("path"));
+        menu.put("component", row.get("component"));
+        menu.put("webUrl", row.get("web_url"));
+        menu.put("children", new ArrayList<Map<String, Object>>());
+        return menu;
+    }
+
+    private Map<String, Object> findMenu(List<Map<String, Object>> rows, Long id) {
+        for (Map<String, Object> row : rows) {
+            if (id.equals(((Number) row.get("id")).longValue())) {
+                return row;
+            }
+        }
+        return null;
     }
 
     private Map<String, Object> buildSession(AuthUser authUser) {

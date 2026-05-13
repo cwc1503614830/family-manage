@@ -139,7 +139,8 @@ public class SystemManageService {
 
     public List<Map<String, Object>> listMenus() {
         return jdbcTemplate.queryForList(
-                "SELECT id, name, code, icon, sort_no, visible, created_at FROM sys_menu ORDER BY sort_no, id");
+                "SELECT id, parent_id, name, code, icon, path, component, web_url, sort_no, visible, created_at "
+                        + "FROM sys_menu ORDER BY parent_id IS NOT NULL, sort_no, id");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -148,13 +149,22 @@ public class SystemManageService {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO sys_menu (name, code, icon, sort_no, visible, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+                    "INSERT INTO sys_menu (parent_id, name, code, icon, path, component, web_url, sort_no, visible, created_at, updated_at) "
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
                     Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, request.getName().trim());
-            statement.setString(2, request.getCode().trim());
-            statement.setString(3, request.getIcon());
-            statement.setInt(4, request.getSortNo() == null ? 100 : request.getSortNo());
-            statement.setInt(5, Boolean.FALSE.equals(request.getVisible()) ? 0 : 1);
+            if (request.getParentId() == null || request.getParentId() == 0) {
+                statement.setObject(1, null);
+            } else {
+                statement.setLong(1, request.getParentId());
+            }
+            statement.setString(2, request.getName().trim());
+            statement.setString(3, request.getCode().trim());
+            statement.setString(4, request.getIcon());
+            statement.setString(5, request.getPath());
+            statement.setString(6, request.getComponent());
+            statement.setString(7, request.getWebUrl());
+            statement.setInt(8, request.getSortNo() == null ? 100 : request.getSortNo());
+            statement.setInt(9, Boolean.FALSE.equals(request.getVisible()) ? 0 : 1);
             return statement;
         }, keyHolder);
         return getMenu(keyHolder.getKey().longValue());
@@ -163,8 +173,14 @@ public class SystemManageService {
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> updateMenu(Long id, MenuSaveRequest request) {
         validateMenu(request);
-        jdbcTemplate.update("UPDATE sys_menu SET name = ?, code = ?, icon = ?, sort_no = ?, visible = ?, updated_at = NOW() WHERE id = ?",
-                request.getName().trim(), request.getCode().trim(), request.getIcon(),
+        Long parentId = request.getParentId() == null || request.getParentId() == 0 ? null : request.getParentId();
+        if (id.equals(parentId)) {
+            throw new IllegalArgumentException("上级菜单不能选择自己");
+        }
+        jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, name = ?, code = ?, icon = ?, path = ?, component = ?, web_url = ?, "
+                        + "sort_no = ?, visible = ?, updated_at = NOW() WHERE id = ?",
+                parentId, request.getName().trim(), request.getCode().trim(), request.getIcon(),
+                request.getPath(), request.getComponent(), request.getWebUrl(),
                 request.getSortNo() == null ? 100 : request.getSortNo(),
                 Boolean.FALSE.equals(request.getVisible()) ? 0 : 1, id);
         return getMenu(id);
@@ -172,6 +188,10 @@ public class SystemManageService {
 
     @Transactional(rollbackFor = Exception.class)
     public Boolean deleteMenu(Long id) {
+        List<Map<String, Object>> children = jdbcTemplate.queryForList("SELECT id FROM sys_menu WHERE parent_id = ?", id);
+        for (Map<String, Object> child : children) {
+            deleteMenu(((Number) child.get("id")).longValue());
+        }
         jdbcTemplate.update("DELETE FROM sys_role_menu WHERE menu_id = ?", id);
         jdbcTemplate.update("DELETE FROM sys_menu WHERE id = ?", id);
         return true;
@@ -199,7 +219,7 @@ public class SystemManageService {
 
     private Map<String, Object> getMenu(Long id) {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id, name, code, icon, sort_no, visible, created_at FROM sys_menu WHERE id = ?",
+                "SELECT id, parent_id, name, code, icon, path, component, web_url, sort_no, visible, created_at FROM sys_menu WHERE id = ?",
                 id);
         return rows.isEmpty() ? Collections.<String, Object>emptyMap() : rows.get(0);
     }

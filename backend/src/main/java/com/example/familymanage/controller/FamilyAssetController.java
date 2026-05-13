@@ -55,25 +55,25 @@ public class FamilyAssetController {
     }
 
     @PostMapping
-    @RequirePermission("asset:create")
+    @RequirePermission("asset:view")
     public ApiResponse<FamilyAsset> create(@RequestBody FamilyAsset asset) {
         return ApiResponse.ok(familyAssetService.createAsset(asset));
     }
 
     @PutMapping("/{id}")
-    @RequirePermission("asset:update")
+    @RequirePermission("asset:view")
     public ApiResponse<FamilyAsset> update(@PathVariable Long id, @RequestBody FamilyAsset asset) {
         return ApiResponse.ok(familyAssetService.updateAsset(id, asset));
     }
 
     @PatchMapping("/{id}/stock")
-    @RequirePermission("asset:update")
+    @RequirePermission("asset:view")
     public ApiResponse<FamilyAsset> changeStock(@PathVariable Long id, @RequestBody StockChangeRequest request) {
         return ApiResponse.ok(familyAssetService.changeStock(id, request.getDelta()));
     }
 
     @DeleteMapping("/{id}")
-    @RequirePermission("asset:delete")
+    @RequirePermission("asset:view")
     public ApiResponse<Boolean> delete(@PathVariable Long id) {
         return ApiResponse.ok(familyAssetService.removeById(id));
     }

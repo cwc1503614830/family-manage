@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS cc_test DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+npmCREATE DATABASE IF NOT EXISTS cc_test DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 USE cc_test;
 
@@ -57,9 +57,13 @@ CREATE TABLE IF NOT EXISTS sys_role (
 
 CREATE TABLE IF NOT EXISTS sys_menu (
   id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  parent_id BIGINT DEFAULT NULL COMMENT '父级菜单ID',
   name VARCHAR(80) NOT NULL COMMENT '菜单名称',
   code VARCHAR(80) NOT NULL COMMENT '权限编码',
   icon VARCHAR(20) DEFAULT NULL COMMENT '图标',
+  path VARCHAR(160) DEFAULT NULL COMMENT '菜单路径',
+  component VARCHAR(160) DEFAULT NULL COMMENT '菜单组件',
+  web_url VARCHAR(300) DEFAULT NULL COMMENT '网页地址',
   sort_no INT NOT NULL DEFAULT 100 COMMENT '排序',
   visible TINYINT NOT NULL DEFAULT 1 COMMENT '是否菜单可见',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -92,14 +96,17 @@ CREATE TABLE IF NOT EXISTS sys_auth_token (
   KEY idx_expire_at (expire_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录令牌';
 
-INSERT IGNORE INTO sys_menu (name, code, icon, sort_no, visible) VALUES
-('全部资产', 'asset:view', '▦', 10, 1),
-('新增资产', 'asset:create', '＋', 11, 0),
-('编辑资产', 'asset:update', '✎', 12, 0),
-('删除资产', 'asset:delete', '×', 13, 0),
-('用户管理', 'system:user', '◉', 80, 1),
-('角色管理', 'system:role', '◇', 81, 1),
-('菜单权限', 'system:menu', '⚙', 82, 1);
+INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES
+('全部资产', 'asset:view', '▦', '/assets', 'AssetConsole', '', 10, 1),
+('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),
+('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),
+('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),
+('菜单权限', 'system:menu', '☷', '/system/menus', 'SystemMenu', '', 83, 1);
+
+UPDATE sys_menu child
+JOIN sys_menu parent ON parent.code = 'system:manage'
+SET child.parent_id = parent.id
+WHERE child.code IN ('system:user', 'system:role', 'system:menu');
 
 INSERT IGNORE INTO sys_role (code, name, remark) VALUES
 ('admin', '家庭管理员', '拥有全部系统权限'),
@@ -109,7 +116,7 @@ INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
 SELECT r.id, m.id FROM sys_role r CROSS JOIN sys_menu m WHERE r.code = 'admin';
 
 INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
-SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('asset:view', 'asset:create', 'asset:update')
+SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code = 'asset:view'
 WHERE r.code = 'member';
 
 INSERT IGNORE INTO sys_user (username, password_hash, display_name, status) VALUES
