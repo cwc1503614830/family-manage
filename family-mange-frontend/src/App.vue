@@ -73,12 +73,16 @@ import LoginView from './views/LoginView.vue'
 import MenuManageView from './views/MenuManageView.vue'
 import RoleManageView from './views/RoleManageView.vue'
 import UserManageView from './views/UserManageView.vue'
+import WealthOverviewView from './views/WealthOverviewView.vue'
+import WealthTypeView from './views/WealthTypeView.vue'
 
 const viewMap = {
   'asset:view': AssetView,
   'clothes:item': ClothesItemView,
   'clothes:type': ClothesTypeView,
   'clothes:location': ClothesLocationView,
+  'wealth:overview': WealthOverviewView,
+  'wealth:type': WealthTypeView,
   'system:user': UserManageView,
   'system:role': RoleManageView,
   'system:menu': MenuManageView
@@ -92,6 +96,8 @@ export default {
     ClothesItemView,
     ClothesTypeView,
     ClothesLocationView,
+    WealthOverviewView,
+    WealthTypeView,
     UserManageView,
     RoleManageView,
     MenuManageView

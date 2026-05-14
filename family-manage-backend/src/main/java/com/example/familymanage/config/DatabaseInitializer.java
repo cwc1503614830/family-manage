@@ -44,6 +44,7 @@ public class DatabaseInitializer implements ApplicationRunner {
             seedDemoData();
         }
         initClothesTables();
+        initWealthTables();
         seedAuthData();
     }
 
@@ -217,6 +218,43 @@ public class DatabaseInitializer implements ApplicationRunner {
         }
     }
 
+    private void initWealthTables() {
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS wealth_type ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "asset_type VARCHAR(80) NOT NULL COMMENT '资产类型',"
+                + "remark VARCHAR(300) DEFAULT NULL COMMENT '备注',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_asset_type (asset_type)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财富资产类型'");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS wealth_asset ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "asset_name VARCHAR(120) NOT NULL COMMENT '资产名称',"
+                + "type_id BIGINT NOT NULL COMMENT '资产类型ID',"
+                + "amount DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '资产金额',"
+                + "record_date DATE DEFAULT NULL COMMENT '入账日期',"
+                + "owner_user_id BIGINT NOT NULL COMMENT '持有人',"
+                + "remark VARCHAR(500) DEFAULT NULL COMMENT '备注',"
+                + "created_by VARCHAR(60) DEFAULT NULL COMMENT '创建人',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_by VARCHAR(60) DEFAULT NULL COMMENT '更新人',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_asset_name (asset_name),"
+                + "KEY idx_type_id (type_id),"
+                + "KEY idx_owner_user_id (owner_user_id),"
+                + "KEY idx_record_date (record_date)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财富资产总览'");
+
+        Integer typeCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM wealth_type", Integer.class);
+        if (typeCount != null && typeCount == 0) {
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "现金", "默认资产类型");
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "微信", "默认资产类型");
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "支付宝", "默认资产类型");
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "黄金", "默认资产类型");
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "基金", "默认资产类型");
+        }
+    }
+
     private void seedAuthData() {
         jdbcTemplate.update("INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES "
                 + "('全部资产', 'asset:view', '▦', '/assets', 'AssetConsole', '', 10, 1),"
@@ -224,6 +262,9 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "('衣服明细', 'clothes:item', '☰', '/clothes/items', 'ClothesItem', '', 21, 1),"
                 + "('衣服类型', 'clothes:type', '◈', '/clothes/types', 'ClothesType', '', 22, 1),"
                 + "('存放位置', 'clothes:location', '⌖', '/clothes/locations', 'ClothesLocation', '', 23, 1),"
+                + "('财富管理', 'wealth:manage', '￥', '/wealth', 'WealthLayout', '', 30, 1),"
+                + "('资产总览', 'wealth:overview', '☰', '/wealth/assets', 'WealthOverview', '', 31, 1),"
+                + "('资产类型', 'wealth:type', '◈', '/wealth/types', 'WealthType', '', 32, 1),"
                 + "('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),"
                 + "('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),"
                 + "('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),"
@@ -239,11 +280,18 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (clothesMenuId != null) {
             jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('clothes:item', 'clothes:type', 'clothes:location')", clothesMenuId);
         }
+        Long wealthMenuId = getMenuId("wealth:manage");
+        if (wealthMenuId != null) {
+            jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('wealth:overview', 'wealth:type')", wealthMenuId);
+        }
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/assets', component = 'AssetConsole', sort_no = 10, visible = 1 WHERE code = 'asset:view'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/clothes', component = 'ClothesLayout', sort_no = 20, visible = 1 WHERE code = 'clothes:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/items', component = 'ClothesItem', sort_no = 21, visible = 1 WHERE code = 'clothes:item'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/types', component = 'ClothesType', sort_no = 22, visible = 1 WHERE code = 'clothes:type'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/locations', component = 'ClothesLocation', sort_no = 23, visible = 1 WHERE code = 'clothes:location'");
+        jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/wealth', component = 'WealthLayout', sort_no = 30, visible = 1 WHERE code = 'wealth:manage'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/wealth/assets', component = 'WealthOverview', sort_no = 31, visible = 1 WHERE code = 'wealth:overview'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/wealth/types', component = 'WealthType', sort_no = 32, visible = 1 WHERE code = 'wealth:type'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/system', component = 'SystemLayout', sort_no = 80, visible = 1 WHERE code = 'system:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/users', component = 'SystemUser', sort_no = 81, visible = 1 WHERE code = 'system:user'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/roles', component = 'SystemRole', sort_no = 82, visible = 1 WHERE code = 'system:role'");
@@ -259,6 +307,9 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "WHERE r.code = 'member'");
         jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
                 + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('clothes:manage', 'clothes:item', 'clothes:type', 'clothes:location') "
+                + "WHERE r.code = 'member'");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('wealth:manage', 'wealth:overview', 'wealth:type') "
                 + "WHERE r.code = 'member'");
         Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys_user", Integer.class);
         if (userCount != null && userCount == 0) {

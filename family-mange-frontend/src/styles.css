@@ -309,6 +309,31 @@ button:disabled {
   flex: 0 0 auto;
 }
 
+.wealth-total-panel {
+  display: grid;
+  align-self: center;
+  min-width: 260px;
+  border: 1px solid var(--parchment);
+  border-radius: 16px;
+  background: var(--card-bg);
+  padding: 18px 24px;
+  box-shadow: var(--card-shadow);
+}
+
+.wealth-total-panel span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.wealth-total-panel strong {
+  margin-top: 8px;
+  color: var(--terracotta);
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1;
+}
+
 .head-actions {
   display: flex;
   align-items: center;
@@ -1305,6 +1330,10 @@ button:disabled {
   .toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .wealth-total-panel {
+    min-width: 0;
   }
 
   .page-head h1 {

@@ -147,12 +147,49 @@ INSERT IGNORE INTO clothes_location (area_code, area_name, remark) VALUES
 ('CWYG', '次卧衣柜', '需求示例位置'),
 ('BOX3-CWYG', '3号箱子-次卧衣柜', '需求示例位置');
 
+CREATE TABLE IF NOT EXISTS wealth_type (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  asset_type VARCHAR(80) NOT NULL COMMENT '资产类型',
+  remark VARCHAR(300) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_asset_type (asset_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财富资产类型';
+
+CREATE TABLE IF NOT EXISTS wealth_asset (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  asset_name VARCHAR(120) NOT NULL COMMENT '资产名称',
+  type_id BIGINT NOT NULL COMMENT '资产类型ID',
+  amount DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '资产金额',
+  record_date DATE DEFAULT NULL COMMENT '入账日期',
+  owner_user_id BIGINT NOT NULL COMMENT '持有人',
+  remark VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  created_by VARCHAR(60) DEFAULT NULL COMMENT '创建人',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_by VARCHAR(60) DEFAULT NULL COMMENT '更新人',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_asset_name (asset_name),
+  KEY idx_type_id (type_id),
+  KEY idx_owner_user_id (owner_user_id),
+  KEY idx_record_date (record_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财富资产总览';
+
+INSERT IGNORE INTO wealth_type (asset_type, remark) VALUES
+('现金', '默认资产类型'),
+('微信', '默认资产类型'),
+('支付宝', '默认资产类型'),
+('黄金', '默认资产类型'),
+('基金', '默认资产类型');
+
 INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES
 ('全部资产', 'asset:view', '▦', '/assets', 'AssetConsole', '', 10, 1),
 ('衣服管理', 'clothes:manage', '◇', '/clothes', 'ClothesLayout', '', 20, 1),
 ('衣服明细', 'clothes:item', '☰', '/clothes/items', 'ClothesItem', '', 21, 1),
 ('衣服类型', 'clothes:type', '◈', '/clothes/types', 'ClothesType', '', 22, 1),
 ('存放位置', 'clothes:location', '⌖', '/clothes/locations', 'ClothesLocation', '', 23, 1),
+('财富管理', 'wealth:manage', '￥', '/wealth', 'WealthLayout', '', 30, 1),
+('资产总览', 'wealth:overview', '☰', '/wealth/assets', 'WealthOverview', '', 31, 1),
+('资产类型', 'wealth:type', '◈', '/wealth/types', 'WealthType', '', 32, 1),
 ('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),
 ('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),
 ('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),
@@ -168,6 +205,11 @@ JOIN sys_menu parent ON parent.code = 'clothes:manage'
 SET child.parent_id = parent.id
 WHERE child.code IN ('clothes:item', 'clothes:type', 'clothes:location');
 
+UPDATE sys_menu child
+JOIN sys_menu parent ON parent.code = 'wealth:manage'
+SET child.parent_id = parent.id
+WHERE child.code IN ('wealth:overview', 'wealth:type');
+
 INSERT IGNORE INTO sys_role (code, name, remark) VALUES
 ('admin', '家庭管理员', '拥有全部系统权限'),
 ('member', '家庭成员', '可查看并维护家庭资产');
@@ -181,6 +223,10 @@ WHERE r.code = 'member';
 
 INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
 SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('clothes:manage', 'clothes:item', 'clothes:type', 'clothes:location')
+WHERE r.code = 'member';
+
+INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
+SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('wealth:manage', 'wealth:overview', 'wealth:type')
 WHERE r.code = 'member';
 
 INSERT IGNORE INTO sys_user (username, password_hash, display_name, status) VALUES
