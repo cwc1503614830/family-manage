@@ -44,7 +44,16 @@
             <td class="check-col"><input v-model="selectedIds" type="checkbox" :value="menu.id" /></td>
             <td>
               <div class="tree-name" :style="{ paddingLeft: `${menu.level * 24}px` }">
-                <span class="tree-toggle">{{ menu.hasChildren ? '⌄' : '·' }}</span>
+                <button
+                  v-if="menu.hasChildren"
+                  class="tree-toggle"
+                  type="button"
+                  :title="isExpanded(menu.id) ? '收起' : '展开'"
+                  @click="toggleExpand(menu.id)"
+                >
+                  {{ isExpanded(menu.id) ? '⌄' : '›' }}
+                </button>
+                <span v-else class="tree-toggle leaf">·</span>
                 <span class="tree-icon">{{ menu.icon || '▦' }}</span>
                 <strong>{{ menu.name }}</strong>
               </div>
@@ -136,6 +145,7 @@ export default {
     return {
       menus: [],
       selectedIds: [],
+      expandedIds: [],
       keyword: '',
       filterVisible: false,
       dialogVisible: false,
@@ -146,7 +156,7 @@ export default {
   computed: {
     menuTreeRows() {
       const keyword = this.keyword.trim()
-      return this.flattenMenus(buildTree(this.menus), 0)
+      return this.flattenMenus(buildTree(this.menus), 0, Boolean(keyword))
         .filter(menu => {
           if (!keyword) {
             return true
@@ -174,6 +184,7 @@ export default {
     async loadMenus() {
       this.menus = await listMenus()
       this.selectedIds = this.selectedIds.filter(id => this.menus.find(menu => menu.id === id))
+      this.expandedIds = this.expandedIds.filter(id => this.menus.find(menu => menu.id === id))
     },
     openMenuForm(menu, parent) {
       this.editingId = menu ? menu.id : null
@@ -232,15 +243,26 @@ export default {
     toggleAllRows(event) {
       this.selectedIds = event.target.checked ? this.menuTreeRows.map(menu => menu.id) : []
     },
-    flattenMenus(menus, level) {
+    toggleExpand(id) {
+      if (this.expandedIds.includes(id)) {
+        this.expandedIds = this.expandedIds.filter(item => item !== id)
+      } else {
+        this.expandedIds = [...this.expandedIds, id]
+      }
+    },
+    isExpanded(id) {
+      return this.expandedIds.includes(id)
+    },
+    flattenMenus(menus, level, forceExpand) {
       return menus.reduce((rows, menu) => {
+        const hasChildren = Boolean(menu.children && menu.children.length)
         rows.push({
           ...menu,
           level,
-          hasChildren: Boolean(menu.children && menu.children.length)
+          hasChildren
         })
-        if (menu.children && menu.children.length) {
-          rows.push(...this.flattenMenus(menu.children, level + 1))
+        if (hasChildren && (forceExpand || this.isExpanded(menu.id))) {
+          rows.push(...this.flattenMenus(menu.children, level + 1, forceExpand))
         }
         return rows
       }, [])
@@ -266,7 +288,7 @@ function buildTree(items) {
   const map = new Map()
   const roots = []
   ;(normalizeSystemMenus(items || [])).forEach(item => {
-    map.set(item.id, { ...item, children: [] })
+    map.set(item.id, { ...item, children: [...(item.children || [])] })
   })
   map.forEach(item => {
     const parentId = Number(item.parent_id || item.parentId || 0)

@@ -43,6 +43,7 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (count != null && count == 0) {
             seedDemoData();
         }
+        initClothesTables();
         seedAuthData();
     }
 
@@ -154,9 +155,75 @@ public class DatabaseInitializer implements ApplicationRunner {
                 "主食,低库存", "已用完，待补货");
     }
 
+    private void initClothesTables() {
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS clothes_type ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "type_code VARCHAR(60) NOT NULL COMMENT '衣服类型编码',"
+                + "type_name VARCHAR(80) NOT NULL COMMENT '衣服类型名称',"
+                + "remark VARCHAR(300) DEFAULT NULL COMMENT '备注',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_type_code (type_code)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='衣服类型'");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS clothes_location ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "area_code VARCHAR(80) NOT NULL COMMENT '所在区域编码',"
+                + "area_name VARCHAR(120) NOT NULL COMMENT '所在区域名称',"
+                + "remark VARCHAR(300) DEFAULT NULL COMMENT '备注',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_area_code (area_code)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='衣服存放位置'");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS clothes_item ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "clothes_name VARCHAR(120) NOT NULL COMMENT '衣服名称',"
+                + "type_code VARCHAR(60) NOT NULL COMMENT '衣服类型编码',"
+                + "area_code VARCHAR(80) NOT NULL COMMENT '所在区域编码',"
+                + "purchase_time DATE DEFAULT NULL COMMENT '买入时间',"
+                + "expire_time DATE DEFAULT NULL COMMENT '过期时间',"
+                + "image_url VARCHAR(500) NOT NULL DEFAULT '' COMMENT '图片地址',"
+                + "owner_user_id BIGINT NOT NULL COMMENT '拥有者',"
+                + "remark VARCHAR(500) DEFAULT NULL COMMENT '备注',"
+                + "created_by VARCHAR(60) DEFAULT NULL COMMENT '创建人',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_by VARCHAR(60) DEFAULT NULL COMMENT '更新人',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_clothes_name (clothes_name),"
+                + "KEY idx_type_code (type_code),"
+                + "KEY idx_area_code (area_code),"
+                + "KEY idx_owner_user_id (owner_user_id),"
+                + "KEY idx_expire_time (expire_time)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='衣服明细'");
+
+        Integer typeCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM clothes_type", Integer.class);
+        if (typeCount != null && typeCount == 0) {
+            jdbcTemplate.update("INSERT INTO clothes_type (type_code, type_name, remark) VALUES (?, ?, ?)",
+                    "XiaKu", "夏裤", "默认示例类型");
+            jdbcTemplate.update("INSERT INTO clothes_type (type_code, type_name, remark) VALUES (?, ?, ?)",
+                    "DuanXiu", "短袖", "默认示例类型");
+        }
+
+        Integer locationCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM clothes_location", Integer.class);
+        if (locationCount != null && locationCount == 0) {
+            jdbcTemplate.update("INSERT INTO clothes_location (area_code, area_name, remark) VALUES (?, ?, ?)",
+                    "BOX1-ZWYG", "1号箱子-主卧衣柜", "需求示例位置");
+            jdbcTemplate.update("INSERT INTO clothes_location (area_code, area_name, remark) VALUES (?, ?, ?)",
+                    "BOX3-ZWYG", "3号箱子-主卧衣柜", "需求示例位置");
+            jdbcTemplate.update("INSERT INTO clothes_location (area_code, area_name, remark) VALUES (?, ?, ?)",
+                    "ZWYG", "主卧衣柜", "需求示例位置");
+            jdbcTemplate.update("INSERT INTO clothes_location (area_code, area_name, remark) VALUES (?, ?, ?)",
+                    "CWYG", "次卧衣柜", "需求示例位置");
+            jdbcTemplate.update("INSERT INTO clothes_location (area_code, area_name, remark) VALUES (?, ?, ?)",
+                    "BOX3-CWYG", "3号箱子-次卧衣柜", "需求示例位置");
+        }
+    }
+
     private void seedAuthData() {
         jdbcTemplate.update("INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES "
                 + "('全部资产', 'asset:view', '▦', '/assets', 'AssetConsole', '', 10, 1),"
+                + "('衣服管理', 'clothes:manage', '◇', '/clothes', 'ClothesLayout', '', 20, 1),"
+                + "('衣服明细', 'clothes:item', '☰', '/clothes/items', 'ClothesItem', '', 21, 1),"
+                + "('衣服类型', 'clothes:type', '◈', '/clothes/types', 'ClothesType', '', 22, 1),"
+                + "('存放位置', 'clothes:location', '⌖', '/clothes/locations', 'ClothesLocation', '', 23, 1),"
                 + "('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),"
                 + "('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),"
                 + "('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),"
@@ -168,7 +235,15 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (systemMenuId != null) {
             jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('system:user', 'system:role', 'system:menu')", systemMenuId);
         }
+        Long clothesMenuId = getMenuId("clothes:manage");
+        if (clothesMenuId != null) {
+            jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('clothes:item', 'clothes:type', 'clothes:location')", clothesMenuId);
+        }
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/assets', component = 'AssetConsole', sort_no = 10, visible = 1 WHERE code = 'asset:view'");
+        jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/clothes', component = 'ClothesLayout', sort_no = 20, visible = 1 WHERE code = 'clothes:manage'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/items', component = 'ClothesItem', sort_no = 21, visible = 1 WHERE code = 'clothes:item'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/types', component = 'ClothesType', sort_no = 22, visible = 1 WHERE code = 'clothes:type'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/locations', component = 'ClothesLocation', sort_no = 23, visible = 1 WHERE code = 'clothes:location'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/system', component = 'SystemLayout', sort_no = 80, visible = 1 WHERE code = 'system:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/users', component = 'SystemUser', sort_no = 81, visible = 1 WHERE code = 'system:user'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/roles', component = 'SystemRole', sort_no = 82, visible = 1 WHERE code = 'system:role'");
@@ -181,6 +256,9 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "SELECT r.id, m.id FROM sys_role r CROSS JOIN sys_menu m WHERE r.code = 'admin'");
         jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
                 + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code = 'asset:view' "
+                + "WHERE r.code = 'member'");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('clothes:manage', 'clothes:item', 'clothes:type', 'clothes:location') "
                 + "WHERE r.code = 'member'");
         Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys_user", Integer.class);
         if (userCount != null && userCount == 0) {

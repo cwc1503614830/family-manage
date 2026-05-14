@@ -1050,6 +1050,60 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.resizable-table table {
+  table-layout: fixed;
+}
+
+.resizable-table th {
+  position: relative;
+  user-select: none;
+}
+
+.resizable-table th,
+.resizable-table td {
+  overflow: hidden;
+}
+
+.resizable-table .th-label {
+  display: block;
+  overflow: hidden;
+  padding-right: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.column-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 2;
+}
+
+.column-resizer::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 3px;
+  bottom: 12px;
+  width: 1px;
+  background: var(--parchment);
+}
+
+.column-resizer:hover::after {
+  background: var(--terracotta);
+}
+
+.table-empty {
+  display: table-cell !important;
+  height: 120px;
+  color: var(--ink-ghost);
+  text-align: center !important;
+  font-weight: 700;
+}
+
 .admin-table tr:last-child td {
   border-bottom: 0;
 }
@@ -1105,10 +1159,33 @@ button:disabled {
 }
 
 .tree-toggle {
+  display: inline-grid;
   width: 16px;
+  height: 22px;
+  border: 0;
+  background: transparent;
   color: var(--ink-ghost);
+  cursor: pointer;
+  place-items: center;
   text-align: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+}
+
+.tree-toggle:hover {
+  color: var(--terracotta);
+  transform: scale(1.08);
+}
+
+.tree-toggle.leaf {
+  cursor: default;
   font-size: 13px;
+}
+
+.tree-toggle.leaf:hover {
+  color: var(--ink-ghost);
+  transform: none;
 }
 
 .tree-icon {

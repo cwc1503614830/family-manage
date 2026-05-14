@@ -66,6 +66,9 @@
 import { getSummary } from './api/assets'
 import { currentUser as fetchCurrentUser, login, logout, setAuthToken } from './api/auth'
 import AssetView from './views/AssetView.vue'
+import ClothesItemView from './views/ClothesItemView.vue'
+import ClothesLocationView from './views/ClothesLocationView.vue'
+import ClothesTypeView from './views/ClothesTypeView.vue'
 import LoginView from './views/LoginView.vue'
 import MenuManageView from './views/MenuManageView.vue'
 import RoleManageView from './views/RoleManageView.vue'
@@ -73,6 +76,9 @@ import UserManageView from './views/UserManageView.vue'
 
 const viewMap = {
   'asset:view': AssetView,
+  'clothes:item': ClothesItemView,
+  'clothes:type': ClothesTypeView,
+  'clothes:location': ClothesLocationView,
   'system:user': UserManageView,
   'system:role': RoleManageView,
   'system:menu': MenuManageView
@@ -83,6 +89,9 @@ export default {
   components: {
     LoginView,
     AssetView,
+    ClothesItemView,
+    ClothesTypeView,
+    ClothesLocationView,
     UserManageView,
     RoleManageView,
     MenuManageView
