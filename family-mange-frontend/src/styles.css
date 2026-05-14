@@ -98,7 +98,7 @@ button:disabled {
 .app-shell {
   display: grid;
   min-height: 100vh;
-  grid-template-columns: 272px 1fr;
+  grid-template-columns: 272px minmax(0, 1fr);
 }
 
 /* ───── Sidebar ───── */
@@ -282,6 +282,8 @@ button:disabled {
 
 /* ───── Workspace ───── */
 .workspace {
+  min-width: 0;
+  overflow-x: hidden;
   padding: 48px 56px 72px;
   background:
     radial-gradient(ellipse 80% 50% at 80% -10%, rgba(196, 85, 58, 0.04), transparent),
@@ -296,6 +298,15 @@ button:disabled {
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
+  min-width: 0;
+}
+
+.page-head > div {
+  min-width: 0;
+}
+
+.page-head .primary-btn {
+  flex: 0 0 auto;
 }
 
 .head-actions {
@@ -1015,10 +1026,14 @@ button:disabled {
 
 /* Admin */
 .admin-page {
+  width: 100%;
+  min-width: 0;
   animation: fadeUp 0.4s var(--ease-out) both;
 }
 
 .admin-table {
+  width: 100%;
+  max-width: 100%;
   overflow: auto;
   margin-top: 34px;
   border-radius: 16px;
@@ -1051,6 +1066,8 @@ button:disabled {
 }
 
 .resizable-table table {
+  width: max-content;
+  min-width: 100%;
   table-layout: fixed;
 }
 
