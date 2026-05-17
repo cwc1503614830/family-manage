@@ -105,10 +105,11 @@ public class AuthService {
 
     private Set<String> loadPermissions(Long userId) {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT DISTINCT m.code FROM sys_menu m "
+                "SELECT m.code FROM sys_menu m "
                         + "JOIN sys_role_menu rm ON rm.menu_id = m.id "
                         + "JOIN sys_user_role ur ON ur.role_id = rm.role_id "
-                        + "WHERE ur.user_id = ? ORDER BY m.sort_no, m.id",
+                        + "WHERE ur.user_id = ? "
+                        + "GROUP BY m.code ORDER BY MIN(m.sort_no), MIN(m.id)",
                 userId);
         Set<String> permissions = new HashSet<String>();
         for (Map<String, Object> row : rows) {
