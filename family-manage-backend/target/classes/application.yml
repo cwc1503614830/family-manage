@@ -1,5 +1,5 @@
 server:
-  port: 12700
+  port: 12300
 
 spring:
   application:
@@ -38,15 +38,10 @@ spring:
         master:
           type: com.alibaba.druid.pool.DruidDataSource
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://172.16.5.63:3306/cc_test?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Hongkong
+          url: jdbc:mysql://192.168.216.140:3306/cc_test?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Hongkong
           username: root
-          password: root
-        old_km:
-          type: com.alibaba.druid.pool.DruidDataSource
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://172.16.5.63:3306/krp_app?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Hongkong
-          username: root
-          password: root
+          password: admin123456
+
 
 mybatis-plus:
   configuration:

@@ -111,7 +111,7 @@ echo   %FRONTEND_IMAGE%:%TAG%
 echo.
 echo Example run:
 echo   docker network create family-manage-net
-echo   docker run -d --name family-manage-backend --network family-manage-net -p 12700:12700 %BACKEND_IMAGE%:%TAG%
+echo   docker run -d --name family-manage-backend --network family-manage-net -p 12300:12300 %BACKEND_IMAGE%:%TAG%
 echo   docker run -d --name family-manage-frontend --network family-manage-net -p 8080:80 %FRONTEND_IMAGE%:%TAG%
 echo.
 exit /b 0
