@@ -59,6 +59,20 @@
         @refresh-summary="loadSummary"
       />
     </main>
+
+    <nav class="mobile-bottom-tabs">
+      <button
+        v-for="tab in mobileTabs"
+        :key="tab.code"
+        class="tab-btn"
+        :class="{ active: activeView === tab.code }"
+        type="button"
+        @click="switchView(tab.code)"
+      >
+        <span class="tab-icon">{{ tab.icon }}</span>
+        <span class="tab-label">{{ tab.name }}</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -112,7 +126,12 @@ export default {
       activeView: 'asset:view',
       loginError: '',
       loginLoading: false,
-      summary: {}
+      summary: {},
+      mobileTabs: [
+        { code: 'asset:view', name: '全部资产', icon: '▦' },
+        { code: 'clothes:item', name: '衣服明细', icon: '⌥' },
+        { code: 'wealth:overview', name: '资产总览', icon: '⌂' }
+      ]
     }
   },
   computed: {
