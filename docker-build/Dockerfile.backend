@@ -1,4 +1,5 @@
-FROM eclipse-temurin:8-jre
+# 直连 DaoCloud 公共镜像，避免失效的 registry-mirrors（如 docker.1panel.live）返回 403
+FROM docker.m.daocloud.io/library/eclipse-temurin:8-jre
 
 WORKDIR /app
 COPY app.jar /app/app.jar

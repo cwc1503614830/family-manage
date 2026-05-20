@@ -1,0 +1,8 @@
+{
+  "insecure-registries": [
+    "192.168.216.140:8091"
+  ],
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io"
+  ]
+}
