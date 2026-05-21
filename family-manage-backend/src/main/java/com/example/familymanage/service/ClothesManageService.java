@@ -29,15 +29,31 @@ public class ClothesManageService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<Map<String, Object>> listItems() {
-        return jdbcTemplate.queryForList("SELECT i.id, i.clothes_name, i.type_code, t.type_name, i.area_code, l.area_name, "
-                + "i.purchase_time, i.expire_time, i.image_url, i.owner_user_id, u.display_name owner_name, i.remark, "
-                + "i.created_by, i.created_at, i.updated_by, i.updated_at "
-                + "FROM clothes_item i "
-                + "LEFT JOIN clothes_type t ON t.type_code = i.type_code "
-                + "LEFT JOIN clothes_location l ON l.area_code = i.area_code "
-                + "LEFT JOIN sys_user u ON u.id = i.owner_user_id "
-                + "ORDER BY i.updated_at DESC, i.id DESC");
+    private static final String ITEM_SELECT_SQL = "SELECT i.id, i.clothes_name, i.type_code, t.type_name, i.area_code, l.area_name, "
+            + "i.purchase_time, i.expire_time, i.image_url, i.owner_user_id, u.display_name owner_name, i.remark, "
+            + "i.created_by, i.created_at, i.updated_by, i.updated_at "
+            + "FROM clothes_item i "
+            + "LEFT JOIN clothes_type t ON t.type_code = i.type_code "
+            + "LEFT JOIN clothes_location l ON l.area_code = i.area_code "
+            + "LEFT JOIN sys_user u ON u.id = i.owner_user_id ";
+
+    public Map<String, Object> listItems(int page, int size) {
+        int safePage = Math.max(page, 1);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        int offset = (safePage - 1) * safeSize;
+        Long total = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM clothes_item", Long.class);
+        if (total == null) {
+            total = 0L;
+        }
+        List<Map<String, Object>> records = jdbcTemplate.queryForList(
+                ITEM_SELECT_SQL + "ORDER BY i.updated_at DESC, i.id DESC LIMIT ? OFFSET ?",
+                safeSize, offset);
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("records", records);
+        result.put("total", total);
+        result.put("page", safePage);
+        result.put("size", safeSize);
+        return result;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -157,13 +173,7 @@ public class ClothesManageService {
     }
 
     private Map<String, Object> getItem(Long id) {
-        return jdbcTemplate.queryForMap("SELECT i.id, i.clothes_name, i.type_code, t.type_name, i.area_code, l.area_name, "
-                + "i.purchase_time, i.expire_time, i.image_url, i.owner_user_id, u.display_name owner_name, i.remark, "
-                + "i.created_by, i.created_at, i.updated_by, i.updated_at "
-                + "FROM clothes_item i "
-                + "LEFT JOIN clothes_type t ON t.type_code = i.type_code "
-                + "LEFT JOIN clothes_location l ON l.area_code = i.area_code "
-                + "LEFT JOIN sys_user u ON u.id = i.owner_user_id WHERE i.id = ?", id);
+        return jdbcTemplate.queryForMap(ITEM_SELECT_SQL + "WHERE i.id = ?", id);
     }
 
     private Map<String, Object> getType(Long id) {

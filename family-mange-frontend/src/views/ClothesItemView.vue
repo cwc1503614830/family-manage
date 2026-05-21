@@ -1,39 +1,56 @@
 <template>
-  <section class="admin-page">
-    <div class="page-head">
-      <div>
-        <p class="eyebrow">Clothes Management</p>
-        <h1>衣服明细</h1>
-        <p>登记家庭成员衣服，并维护类型、位置、拥有者和过期时间。</p>
-      </div>
-      <button class="primary-btn" type="button" @click="openForm()">新增衣服</button>
-    </div>
-
-    <div class="menu-toolbar menu-filter">
-      <button class="ghost-btn refresh-btn" type="button" @click="bootstrap">刷新</button>
-    </div>
-
-    <ResizableTable :columns="columns" :rows="items" empty-text="暂无衣服明细">
-      <template #image="{ row }">
-        <div class="clothes-image-cell">
-          <img
-            v-if="row.image_url"
-            :src="row.image_url"
-            alt="衣服图片"
-            class="clothes-thumb"
-            @click="previewImage(row.image_url)"
-          />
-          <span v-else class="clothes-no-image">无</span>
+  <div class="clothes-item-page">
+    <section class="admin-page">
+      <div class="page-head">
+        <div>
+          <p class="eyebrow">Clothes Management</p>
+          <h1>衣服明细</h1>
+          <p>登记家庭成员衣服，并维护类型、位置、拥有者和过期时间。</p>
         </div>
-      </template>
-      <template #actions="{ row }">
-        <button class="ghost-btn mini" type="button" @click="openForm(row)">编辑</button>
-        <button class="ghost-btn mini danger-text" type="button" @click="removeItem(row)">删除</button>
-      </template>
-    </ResizableTable>
+        <button class="primary-btn" type="button" @click="openForm()">新增衣服</button>
+      </div>
 
-    <div v-if="dialogVisible" class="modal-mask" @click.self="closeForm">
-      <form class="asset-form" @submit.prevent="submitForm">
+      <div class="menu-toolbar menu-filter">
+        <button class="ghost-btn refresh-btn" type="button" @click="bootstrap">刷新</button>
+      </div>
+
+      <ResizableTable :columns="columns" :rows="items" empty-text="暂无衣服明细">
+        <template #image="{ row }">
+          <div class="clothes-image-cell">
+            <img
+              v-if="row.image_url"
+              :src="row.image_url"
+              alt="衣服图片"
+              class="clothes-thumb"
+              @click="previewImage(row.image_url)"
+            />
+            <span v-else class="clothes-no-image">无</span>
+          </div>
+        </template>
+        <template #actions="{ row }">
+          <button class="ghost-btn mini" type="button" @click="openForm(row)">编辑</button>
+          <button class="ghost-btn mini danger-text" type="button" @click="removeItem(row)">删除</button>
+        </template>
+      </ResizableTable>
+
+      <div class="table-pagination">
+        <span class="pagination-summary">共 {{ total }} 条</span>
+        <label class="pagination-size">
+          <span>每页</span>
+          <select v-model.number="pageSize" @change="changePageSize">
+            <option :value="10">10</option>
+            <option :value="20">20</option>
+            <option :value="50">50</option>
+          </select>
+        </label>
+        <button class="ghost-btn mini" type="button" :disabled="page <= 1" @click="goPage(page - 1)">上一页</button>
+        <span class="pagination-current">第 {{ page }} / {{ totalPages }} 页</span>
+        <button class="ghost-btn mini" type="button" :disabled="page >= totalPages" @click="goPage(page + 1)">下一页</button>
+      </div>
+    </section>
+
+    <div v-if="dialogVisible" class="clothes-modal-mask" @click.self="closeForm">
+      <form class="clothes-modal-form" @submit.prevent="submitForm">
         <div class="form-head">
           <div>
             <p class="eyebrow">Clothes Item</p>
@@ -42,81 +59,83 @@
           <button class="icon-btn" type="button" title="关闭" @click="closeForm">×</button>
         </div>
 
-        <div class="form-grid">
-          <label>
-            <span>衣服名称</span>
-            <input v-model.trim="form.clothesName" :disabled="Boolean(editingId)" required placeholder="例如：黑色羽绒服" />
-          </label>
-          <label>
-            <span>衣服类型</span>
-            <select v-model="form.typeCode" required>
-              <option value="">请选择</option>
-              <option v-for="type in types" :key="type.type_code" :value="type.type_code">
-                {{ type.type_code }} - {{ type.type_name }}
-              </option>
-            </select>
-          </label>
-          <label>
-            <span>存放位置</span>
-            <select v-model="form.areaCode" required>
-              <option value="">请选择</option>
-              <option v-for="location in locations" :key="location.area_code" :value="location.area_code">
-                {{ location.area_code }} - {{ location.area_name }}
-              </option>
-            </select>
-          </label>
-          <label>
-            <span>拥有者</span>
-            <select v-model.number="form.ownerUserId" :disabled="Boolean(editingId)" required>
-              <option :value="null">请选择</option>
-              <option v-for="user in users" :key="user.id" :value="user.id">
-                {{ user.display_name || user.username }}
-              </option>
-            </select>
-          </label>
-          <label>
-            <span>买入时间</span>
-            <input v-model="form.purchaseTime" :disabled="Boolean(editingId)" type="date" />
-          </label>
-          <label>
-            <span>过期时间</span>
-            <input v-model="form.expireTime" type="date" />
-          </label>
-          <label class="wide">
-            <span>衣服图片</span>
-            <div class="clothes-upload">
-              <div v-if="form.imageUrl" class="clothes-preview">
-                <img :src="form.imageUrl" alt="预览图" />
-                <button class="ghost-btn mini" type="button" @click="clearImage">移除</button>
+        <div class="clothes-modal-body">
+          <div class="clothes-form-grid">
+            <label>
+              <span>衣服名称</span>
+              <input v-model.trim="form.clothesName" :disabled="Boolean(editingId)" required placeholder="例如：黑色羽绒服" />
+            </label>
+            <label>
+              <span>衣服类型</span>
+              <select v-model="form.typeCode" required>
+                <option value="">请选择</option>
+                <option v-for="type in types" :key="type.type_code" :value="type.type_code">
+                  {{ type.type_code }} - {{ type.type_name }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>存放位置</span>
+              <select v-model="form.areaCode" required>
+                <option value="">请选择</option>
+                <option v-for="location in locations" :key="location.area_code" :value="location.area_code">
+                  {{ location.area_code }} - {{ location.area_name }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>拥有者</span>
+              <select v-model.number="form.ownerUserId" :disabled="Boolean(editingId)" required>
+                <option :value="null">请选择</option>
+                <option v-for="user in users" :key="user.id" :value="user.id">
+                  {{ user.display_name || user.username }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>买入时间</span>
+              <input v-model="form.purchaseTime" :disabled="Boolean(editingId)" type="date" />
+            </label>
+            <label>
+              <span>过期时间</span>
+              <input v-model="form.expireTime" type="date" />
+            </label>
+            <label class="wide">
+              <span>衣服图片</span>
+              <div class="clothes-upload">
+                <div v-if="form.imageUrl" class="clothes-preview">
+                  <img :src="form.imageUrl" alt="预览图" />
+                  <button class="ghost-btn mini" type="button" @click="clearImage">移除</button>
+                </div>
+                <div class="clothes-upload-actions">
+                  <input
+                    ref="fileInput"
+                    type="file"
+                    accept="image/*"
+                    class="clothes-file-input"
+                    @change="handleImageSelect"
+                  />
+                  <button class="ghost-btn" type="button" :disabled="uploading" @click="triggerFileSelect">
+                    {{ uploading ? '上传中...' : form.imageUrl ? '更换图片' : '选择图片' }}
+                  </button>
+                  <span v-if="uploadError" class="form-error">{{ uploadError }}</span>
+                </div>
               </div>
-              <div class="clothes-upload-actions">
-                <input
-                  ref="fileInput"
-                  type="file"
-                  accept="image/*"
-                  class="clothes-file-input"
-                  @change="handleImageSelect"
-                />
-                <button class="ghost-btn" type="button" :disabled="uploading" @click="triggerFileSelect">
-                  {{ uploading ? '上传中...' : form.imageUrl ? '更换图片' : '选择图片' }}
-                </button>
-                <span v-if="uploadError" class="form-error">{{ uploadError }}</span>
-              </div>
-            </div>
-          </label>
-          <label class="wide">
-            <span>备注</span>
-            <textarea v-model.trim="form.remark" rows="3" placeholder="记录换季、清洗或特殊说明"></textarea>
-          </label>
+            </label>
+            <label class="wide">
+              <span>备注</span>
+              <textarea v-model.trim="form.remark" rows="2" placeholder="记录换季、清洗或特殊说明"></textarea>
+            </label>
+          </div>
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions clothes-form-actions">
           <button class="ghost-btn" type="button" @click="closeForm">取消</button>
           <button class="primary-btn" type="submit" :disabled="uploading">保存</button>
         </div>
       </form>
     </div>
-  </section>
+  </div>
 </template>
 
 <script>
@@ -136,6 +155,9 @@ export default {
   data() {
     return {
       items: [],
+      total: 0,
+      page: 1,
+      pageSize: 10,
       types: [],
       locations: [],
       users: [],
@@ -163,21 +185,50 @@ export default {
       ]
     }
   },
+  computed: {
+    totalPages() {
+      return Math.max(1, Math.ceil(this.total / this.pageSize))
+    }
+  },
   created() {
     this.bootstrap()
+  },
+  beforeDestroy() {
+    document.body.classList.remove('modal-open')
   },
   methods: {
     async bootstrap() {
       await Promise.all([this.loadItems(), this.loadOptions()])
     },
     async loadItems() {
-      this.items = await listClothesItems()
+      const result = await listClothesItems({ page: this.page, size: this.pageSize })
+      this.items = result.records || []
+      this.total = Number(result.total || 0)
+      this.page = Number(result.page || this.page)
+      this.pageSize = Number(result.size || this.pageSize)
+      if (this.page > this.totalPages) {
+        this.page = this.totalPages
+        if (this.total > 0) {
+          await this.loadItems()
+        }
+      }
     },
     async loadOptions() {
       const options = await getClothesOptions()
       this.types = options.types || []
       this.locations = options.locations || []
       this.users = options.users || []
+    },
+    goPage(nextPage) {
+      if (nextPage < 1 || nextPage > this.totalPages || nextPage === this.page) {
+        return
+      }
+      this.page = nextPage
+      this.loadItems()
+    },
+    changePageSize() {
+      this.page = 1
+      this.loadItems()
     },
     async openForm(item) {
       await this.loadOptions()
@@ -197,11 +248,13 @@ export default {
           }
         : emptyForm()
       this.dialogVisible = true
+      document.body.classList.add('modal-open')
     },
     closeForm() {
       this.dialogVisible = false
       this.uploadError = ''
       this.uploading = false
+      document.body.classList.remove('modal-open')
     },
     triggerFileSelect() {
       this.$refs.fileInput.click()
@@ -256,6 +309,9 @@ export default {
     async removeItem(item) {
       if (window.confirm(`确认删除衣服「${item.clothes_name}」吗？`)) {
         await deleteClothesItem(item.id)
+        if (this.items.length === 1 && this.page > 1) {
+          this.page -= 1
+        }
         await this.loadItems()
       }
     }
@@ -296,6 +352,10 @@ function formatDateTime(value) {
 </script>
 
 <style scoped>
+.clothes-item-page {
+  width: 100%;
+}
+
 .clothes-image-cell {
   display: flex;
   align-items: center;
@@ -316,9 +376,89 @@ function formatDateTime(value) {
   font-size: 12px;
 }
 
-.clothes-upload {
+.clothes-modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  overflow: hidden;
+  background: rgba(28, 22, 16, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.clothes-modal-form {
+  width: min(1180px, calc(100vw - 24px));
+  height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--card-bg);
+  padding: 24px 28px;
+  box-shadow: 0 30px 80px rgba(28, 22, 16, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.clothes-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.clothes-form-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  height: 100%;
+  align-content: start;
+}
+
+.clothes-form-grid label {
+  display: grid;
+  gap: 8px;
+  color: var(--ink-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.clothes-form-grid input,
+.clothes-form-grid textarea,
+.clothes-form-grid select {
+  min-height: 42px;
+  padding: 10px 14px;
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 14.5px;
+  border: 1px solid var(--parchment);
+  border-radius: 12px;
+  background: var(--cream);
+}
+
+.clothes-form-grid textarea {
+  resize: none;
+  min-height: 72px;
+}
+
+.clothes-form-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.clothes-form-actions {
+  margin-top: 20px;
+  padding-top: 18px;
+  flex-shrink: 0;
+}
+
+.clothes-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .clothes-preview {
@@ -328,8 +468,8 @@ function formatDateTime(value) {
 }
 
 .clothes-preview img {
-  width: 96px;
-  height: 96px;
+  width: 88px;
+  height: 88px;
   object-fit: cover;
   border-radius: 12px;
   border: 1px solid var(--parchment);
@@ -344,5 +484,23 @@ function formatDateTime(value) {
 
 .clothes-file-input {
   display: none;
+}
+
+@media (max-width: 960px) {
+  .clothes-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .clothes-modal-form {
+    width: calc(100vw - 16px);
+    height: calc(100vh - 16px);
+    padding: 18px 16px;
+  }
+
+  .clothes-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

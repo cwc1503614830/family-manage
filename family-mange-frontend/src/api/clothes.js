@@ -1,7 +1,7 @@
 import { http, unwrap } from './http'
 
-export function listClothesItems() {
-  return http.get('/clothes/items').then(unwrap)
+export function listClothesItems(params = {}) {
+  return http.get('/clothes/items', { params }).then(unwrap)
 }
 
 export function createClothesItem(data) {

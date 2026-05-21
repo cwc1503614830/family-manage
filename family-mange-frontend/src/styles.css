@@ -1154,6 +1154,44 @@ button:disabled {
   border-bottom: 0;
 }
 
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 0 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pagination-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-size select {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--parchment);
+  border-radius: 10px;
+  background: var(--card-bg);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pagination-current {
+  min-width: 96px;
+  text-align: center;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
 .admin-table td:last-child {
   display: flex;
   gap: 8px;

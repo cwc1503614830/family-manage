@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,8 +31,9 @@ public class ClothesManageController {
 
     @GetMapping("/items")
     @RequirePermission("clothes:item")
-    public ApiResponse<List<Map<String, Object>>> items() {
-        return ApiResponse.ok(clothesManageService.listItems());
+    public ApiResponse<Map<String, Object>> items(@RequestParam(defaultValue = "1") int page,
+                                                  @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.ok(clothesManageService.listItems(page, size));
     }
 
     @PostMapping("/items")
