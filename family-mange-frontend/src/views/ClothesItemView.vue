@@ -14,6 +14,18 @@
     </div>
 
     <ResizableTable :columns="columns" :rows="items" empty-text="暂无衣服明细">
+      <template #image="{ row }">
+        <div class="clothes-image-cell">
+          <img
+            v-if="row.image_url"
+            :src="row.image_url"
+            alt="衣服图片"
+            class="clothes-thumb"
+            @click="previewImage(row.image_url)"
+          />
+          <span v-else class="clothes-no-image">无</span>
+        </div>
+      </template>
       <template #actions="{ row }">
         <button class="ghost-btn mini" type="button" @click="openForm(row)">编辑</button>
         <button class="ghost-btn mini danger-text" type="button" @click="removeItem(row)">删除</button>
@@ -71,6 +83,28 @@
             <input v-model="form.expireTime" type="date" />
           </label>
           <label class="wide">
+            <span>衣服图片</span>
+            <div class="clothes-upload">
+              <div v-if="form.imageUrl" class="clothes-preview">
+                <img :src="form.imageUrl" alt="预览图" />
+                <button class="ghost-btn mini" type="button" @click="clearImage">移除</button>
+              </div>
+              <div class="clothes-upload-actions">
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="clothes-file-input"
+                  @change="handleImageSelect"
+                />
+                <button class="ghost-btn" type="button" :disabled="uploading" @click="triggerFileSelect">
+                  {{ uploading ? '上传中...' : form.imageUrl ? '更换图片' : '选择图片' }}
+                </button>
+                <span v-if="uploadError" class="form-error">{{ uploadError }}</span>
+              </div>
+            </div>
+          </label>
+          <label class="wide">
             <span>备注</span>
             <textarea v-model.trim="form.remark" rows="3" placeholder="记录换季、清洗或特殊说明"></textarea>
           </label>
@@ -78,7 +112,7 @@
 
         <div class="form-actions">
           <button class="ghost-btn" type="button" @click="closeForm">取消</button>
-          <button class="primary-btn" type="submit">保存</button>
+          <button class="primary-btn" type="submit" :disabled="uploading">保存</button>
         </div>
       </form>
     </div>
@@ -94,6 +128,7 @@ import {
   listClothesItems,
   updateClothesItem
 } from '../api/clothes'
+import { uploadFile } from '../api/upload'
 
 export default {
   name: 'ClothesItemView',
@@ -106,6 +141,8 @@ export default {
       users: [],
       dialogVisible: false,
       editingId: null,
+      uploading: false,
+      uploadError: '',
       form: emptyForm(),
       columns: [
         { key: 'clothes_name', label: '衣服名称', width: 150 },
@@ -115,7 +152,7 @@ export default {
         { key: 'area_name', label: '区域名称', width: 160 },
         { key: 'purchase_time', label: '买入时间', width: 120, formatter: formatDate },
         { key: 'expire_time', label: '过期时间', width: 120, formatter: formatDate },
-        { key: 'image_url', label: '图片地址', width: 160 },
+        { key: 'image_url', label: '图片', width: 90, slot: 'image' },
         { key: 'owner_name', label: '拥有者', width: 120 },
         { key: 'remark', label: '备注', width: 180 },
         { key: 'created_by', label: '创建人', width: 100 },
@@ -145,6 +182,8 @@ export default {
     async openForm(item) {
       await this.loadOptions()
       this.editingId = item ? item.id : null
+      this.uploadError = ''
+      this.uploading = false
       this.form = item
         ? {
             clothesName: item.clothes_name,
@@ -161,8 +200,50 @@ export default {
     },
     closeForm() {
       this.dialogVisible = false
+      this.uploadError = ''
+      this.uploading = false
+    },
+    triggerFileSelect() {
+      this.$refs.fileInput.click()
+    },
+    async handleImageSelect(event) {
+      const file = event.target.files && event.target.files[0]
+      event.target.value = ''
+      if (!file) {
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+        this.uploadError = '请选择图片文件'
+        return
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        this.uploadError = '图片大小不能超过 10MB'
+        return
+      }
+      this.uploadError = ''
+      this.uploading = true
+      try {
+        const result = await uploadFile(file)
+        this.form.imageUrl = result.url || ''
+      } catch (error) {
+        this.uploadError = error.message || '图片上传失败'
+      } finally {
+        this.uploading = false
+      }
+    },
+    clearImage() {
+      this.form.imageUrl = ''
+      this.uploadError = ''
+    },
+    previewImage(url) {
+      if (url) {
+        window.open(url, '_blank')
+      }
     },
     async submitForm() {
+      if (this.uploading) {
+        return
+      }
       const payload = { ...this.form, imageUrl: this.form.imageUrl || '' }
       if (this.editingId) {
         await updateClothesItem(this.editingId, payload)
@@ -182,16 +263,27 @@ export default {
 }
 
 function emptyForm() {
+  const today = new Date()
+  const expireDate = new Date(today)
+  expireDate.setFullYear(expireDate.getFullYear() + 3)
+
   return {
     clothesName: '',
     typeCode: '',
     areaCode: '',
-    purchaseTime: new Date().toISOString().slice(0, 10),
-    expireTime: '',
+    purchaseTime: formatDateInput(today),
+    expireTime: formatDateInput(expireDate),
     imageUrl: '',
     ownerUserId: null,
     remark: ''
   }
+}
+
+function formatDateInput(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function formatDate(value) {
@@ -202,3 +294,55 @@ function formatDateTime(value) {
   return value ? String(value).replace('T', ' ') : '-'
 }
 </script>
+
+<style scoped>
+.clothes-image-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clothes-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid var(--parchment);
+}
+
+.clothes-no-image {
+  color: var(--ink-ghost);
+  font-size: 12px;
+}
+
+.clothes-upload {
+  display: grid;
+  gap: 12px;
+}
+
+.clothes-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clothes-preview img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--parchment);
+}
+
+.clothes-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.clothes-file-input {
+  display: none;
+}
+</style>

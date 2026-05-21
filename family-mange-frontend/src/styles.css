@@ -830,8 +830,10 @@ button:disabled {
 .modal-mask {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
   background: rgba(28, 22, 16, 0.45);
   backdrop-filter: blur(6px);
   padding: 22px;
@@ -841,8 +843,10 @@ button:disabled {
 
 .asset-form {
   width: min(760px, 100%);
-  max-height: min(860px, calc(100vh - 44px));
-  overflow: auto;
+  max-height: none;
+  margin: auto 0;
+  flex-shrink: 0;
+  overflow: visible;
   border-radius: 20px;
   background: var(--card-bg);
   padding: 32px;
@@ -1477,7 +1481,6 @@ button:disabled {
 
   .asset-form {
     padding: 24px 20px;
-    max-height: calc(100vh - 32px);
   }
 
   .form-head h2 {

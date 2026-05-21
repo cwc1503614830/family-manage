@@ -1,5 +1,7 @@
 com\example\familymanage\dto\WealthTypeRequest.class
+com\example\familymanage\config\MinioProperties.class
 com\example\familymanage\config\WebConfig.class
+com\example\familymanage\controller\FileUploadController.class
 com\example\familymanage\service\FamilyAssetService.class
 com\example\familymanage\config\DatabaseInitializer.class
 com\example\familymanage\common\ApiResponse.class
@@ -13,6 +15,8 @@ com\example\familymanage\dto\StockChangeRequest.class
 com\example\familymanage\entity\FamilyAsset.class
 com\example\familymanage\controller\WealthManageController.class
 com\example\familymanage\dto\AssetQuery.class
+com\example\familymanage\config\MinioConfig.class
 com\example\familymanage\config\MybatisPlusConfig.class
+com\example\familymanage\service\MinioService.class
 com\example\familymanage\mapper\FamilyAssetMapper.class
 com\example\familymanage\service\WealthManageService.class

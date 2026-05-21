@@ -108,7 +108,7 @@ public class AuthService {
                 "SELECT DISTINCT m.code FROM sys_menu m "
                         + "JOIN sys_role_menu rm ON rm.menu_id = m.id "
                         + "JOIN sys_user_role ur ON ur.role_id = rm.role_id "
-                        + "WHERE ur.user_id = ? ORDER BY m.sort_no, m.id",
+                        + "WHERE ur.user_id = ?",
                 userId);
         Set<String> permissions = new HashSet<String>();
         for (Map<String, Object> row : rows) {

@@ -67,8 +67,10 @@ public class ClothesManageService {
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> updateItem(Long id, ClothesItemRequest request) {
         validateItem(request, false);
-        jdbcTemplate.update("UPDATE clothes_item SET type_code = ?, area_code = ?, expire_time = ?, remark = ?, updated_by = ?, updated_at = NOW() WHERE id = ?",
-                request.getTypeCode().trim(), request.getAreaCode().trim(), toDate(request.getExpireTime()), request.getRemark(), currentUsername(), id);
+        jdbcTemplate.update("UPDATE clothes_item SET type_code = ?, area_code = ?, expire_time = ?, image_url = ?, remark = ?, updated_by = ?, updated_at = NOW() WHERE id = ?",
+                request.getTypeCode().trim(), request.getAreaCode().trim(), toDate(request.getExpireTime()),
+                StringUtils.hasText(request.getImageUrl()) ? request.getImageUrl().trim() : "",
+                request.getRemark(), currentUsername(), id);
         return getItem(id);
     }
 
