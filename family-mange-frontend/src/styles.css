@@ -75,8 +75,8 @@ button:disabled {
 
 /* ───── Keyframes ───── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideIn {
@@ -85,8 +85,8 @@ button:disabled {
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes shimmer {
@@ -332,6 +332,183 @@ button:disabled {
   font-family: var(--font-display);
   font-size: 30px;
   line-height: 1;
+}
+
+.travel-stat {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.travel-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.travel-tag.indoor {
+  background: rgba(196, 85, 58, 0.12);
+  color: var(--terracotta);
+}
+
+.travel-tag.outdoor {
+  background: rgba(47, 111, 94, 0.14);
+  color: #2f6f5e;
+}
+
+.travel-check {
+  color: var(--ink-muted);
+  font-weight: 700;
+}
+
+.travel-check.done {
+  color: #2f6f5e;
+}
+
+.travel-note-flag {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.travel-note-flag.has {
+  color: var(--terracotta);
+  font-weight: 700;
+}
+
+.travel-note-form {
+  width: min(1080px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.travel-note-form .form-head,
+.travel-note-form .travel-note-title,
+.travel-note-form .form-actions {
+  flex-shrink: 0;
+}
+
+.travel-note-form .travel-note-editor {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.travel-note-form .travel-note-pane {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.travel-note-form .travel-note-textarea {
+  flex: 1;
+  min-height: 0;
+}
+
+.travel-note-form .travel-note-pane.preview {
+  overflow-y: auto;
+}
+
+.travel-note-title {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.travel-note-title span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.travel-note-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.travel-note-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+.travel-note-pane.preview {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.travel-note-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.travel-note-textarea {
+  width: 100%;
+  min-height: 180px;
+  flex: 1;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.travel-note-preview-title {
+  margin: 0 0 8px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.travel-note-preview {
+  color: var(--ink);
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.travel-note-preview h1,
+.travel-note-preview h2,
+.travel-note-preview h3 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+}
+
+.travel-note-preview img {
+  max-width: 100%;
+  margin: 12px 0;
+  border-radius: 12px;
+}
+
+.travel-note-preview code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(44, 37, 32, 0.08);
+}
+
+.travel-note-preview ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+@media (max-width: 900px) {
+  .travel-note-editor {
+    grid-template-columns: 1fr;
+  }
 }
 
 .head-actions {
@@ -832,21 +1009,21 @@ button:disabled {
   inset: 0;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   overflow-y: auto;
   background: rgba(28, 22, 16, 0.45);
   backdrop-filter: blur(6px);
-  padding: 22px;
-  z-index: 1000;
+  padding: 24px;
+  z-index: 2000;
   animation: fadeUp 0.2s var(--ease-out) both;
 }
 
 .asset-form {
   width: min(760px, 100%);
-  max-height: none;
-  margin: auto 0;
+  max-height: calc(100vh - 48px);
+  margin: auto;
   flex-shrink: 0;
-  overflow: visible;
+  overflow-y: auto;
   border-radius: 20px;
   background: var(--card-bg);
   padding: 32px;

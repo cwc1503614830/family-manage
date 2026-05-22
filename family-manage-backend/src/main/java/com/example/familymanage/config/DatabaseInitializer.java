@@ -45,6 +45,7 @@ public class DatabaseInitializer implements ApplicationRunner {
         }
         initClothesTables();
         initWealthTables();
+        initTravelTables();
         seedAuthData();
     }
 
@@ -255,6 +256,46 @@ public class DatabaseInitializer implements ApplicationRunner {
         }
     }
 
+    private void initTravelTables() {
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS travel_wuhan_spot ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "spot_name VARCHAR(120) NOT NULL COMMENT '景点名称',"
+                + "spot_type VARCHAR(20) NOT NULL DEFAULT '室内' COMMENT '景点类型',"
+                + "checked_in TINYINT NOT NULL DEFAULT 0 COMMENT '是否打卡',"
+                + "remark VARCHAR(500) DEFAULT NULL COMMENT '备注',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='武汉游景点'");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS travel_city ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "province VARCHAR(60) NOT NULL COMMENT '省份',"
+                + "city VARCHAR(80) NOT NULL COMMENT '城市',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_province_city (province, city)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='国内游城市字典'");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS travel_domestic ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "city_id BIGINT NOT NULL COMMENT '城市ID',"
+                + "province VARCHAR(60) NOT NULL COMMENT '省份',"
+                + "city VARCHAR(80) NOT NULL COMMENT '城市',"
+                + "cost DECIMAL(18,2) NOT NULL DEFAULT 0 COMMENT '花费',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='国内游记录'");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS travel_domestic_note ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "domestic_id BIGINT NOT NULL COMMENT '国内游记录ID',"
+                + "title VARCHAR(200) DEFAULT NULL COMMENT '笔记标题',"
+                + "content MEDIUMTEXT COMMENT 'Markdown笔记内容',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_domestic_id (domestic_id)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='国内游旅游笔记'");
+    }
+
     private void seedAuthData() {
         jdbcTemplate.update("INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES "
                 + "('全部资产', 'asset:view', '▦', '/assets', 'AssetConsole', '', 10, 1),"
@@ -265,6 +306,9 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "('财富管理', 'wealth:manage', '￥', '/wealth', 'WealthLayout', '', 30, 1),"
                 + "('资产总览', 'wealth:overview', '☰', '/wealth/assets', 'WealthOverview', '', 31, 1),"
                 + "('资产类型', 'wealth:type', '◈', '/wealth/types', 'WealthType', '', 32, 1),"
+                + "('旅游管理', 'travel:manage', '✈', '/travel', 'TravelLayout', '', 40, 1),"
+                + "('武汉游', 'travel:wuhan', '⌂', '/travel/wuhan', 'TravelWuhan', '', 41, 1),"
+                + "('国内游', 'travel:domestic', '☰', '/travel/domestic', 'TravelDomestic', '', 42, 1),"
                 + "('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),"
                 + "('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),"
                 + "('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),"
@@ -284,6 +328,10 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (wealthMenuId != null) {
             jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('wealth:overview', 'wealth:type')", wealthMenuId);
         }
+        Long travelMenuId = getMenuId("travel:manage");
+        if (travelMenuId != null) {
+            jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('travel:wuhan', 'travel:domestic')", travelMenuId);
+        }
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/assets', component = 'AssetConsole', sort_no = 10, visible = 1 WHERE code = 'asset:view'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/clothes', component = 'ClothesLayout', sort_no = 20, visible = 1 WHERE code = 'clothes:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/items', component = 'ClothesItem', sort_no = 21, visible = 1 WHERE code = 'clothes:item'");
@@ -292,6 +340,9 @@ public class DatabaseInitializer implements ApplicationRunner {
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/wealth', component = 'WealthLayout', sort_no = 30, visible = 1 WHERE code = 'wealth:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/wealth/assets', component = 'WealthOverview', sort_no = 31, visible = 1 WHERE code = 'wealth:overview'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/wealth/types', component = 'WealthType', sort_no = 32, visible = 1 WHERE code = 'wealth:type'");
+        jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/travel', component = 'TravelLayout', sort_no = 40, visible = 1 WHERE code = 'travel:manage'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/travel/wuhan', component = 'TravelWuhan', sort_no = 41, visible = 1 WHERE code = 'travel:wuhan'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/travel/domestic', component = 'TravelDomestic', sort_no = 42, visible = 1 WHERE code = 'travel:domestic'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/system', component = 'SystemLayout', sort_no = 80, visible = 1 WHERE code = 'system:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/users', component = 'SystemUser', sort_no = 81, visible = 1 WHERE code = 'system:user'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/roles', component = 'SystemRole', sort_no = 82, visible = 1 WHERE code = 'system:role'");
@@ -310,6 +361,12 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "WHERE r.code = 'member'");
         jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
                 + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('wealth:manage', 'wealth:overview', 'wealth:type') "
+                + "WHERE r.code = 'member'");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r CROSS JOIN sys_menu m "
+                + "WHERE r.code = 'admin' AND m.code IN ('travel:manage', 'travel:wuhan', 'travel:domestic')");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('travel:manage', 'travel:wuhan', 'travel:domestic') "
                 + "WHERE r.code = 'member'");
         Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys_user", Integer.class);
         if (userCount != null && userCount == 0) {

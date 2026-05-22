@@ -21,7 +21,9 @@ public class FileUploadController {
     }
 
     @PostMapping("/upload")
-    public ApiResponse<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
-        return ApiResponse.ok(minioService.uploadImage(file, "clothes"));
+    public ApiResponse<Map<String, String>> upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "folder", defaultValue = "clothes") String folder) {
+        return ApiResponse.ok(minioService.uploadImage(file, folder));
     }
 }

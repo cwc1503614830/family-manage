@@ -89,6 +89,8 @@ import RoleManageView from './views/RoleManageView.vue'
 import UserManageView from './views/UserManageView.vue'
 import WealthOverviewView from './views/WealthOverviewView.vue'
 import WealthTypeView from './views/WealthTypeView.vue'
+import TravelWuhanView from './views/TravelWuhanView.vue'
+import TravelDomesticView from './views/TravelDomesticView.vue'
 
 const viewMap = {
   'asset:view': AssetView,
@@ -97,6 +99,8 @@ const viewMap = {
   'clothes:location': ClothesLocationView,
   'wealth:overview': WealthOverviewView,
   'wealth:type': WealthTypeView,
+  'travel:wuhan': TravelWuhanView,
+  'travel:domestic': TravelDomesticView,
   'system:user': UserManageView,
   'system:role': RoleManageView,
   'system:menu': MenuManageView
@@ -112,6 +116,8 @@ export default {
     ClothesLocationView,
     WealthOverviewView,
     WealthTypeView,
+    TravelWuhanView,
+    TravelDomesticView,
     UserManageView,
     RoleManageView,
     MenuManageView
