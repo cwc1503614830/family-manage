@@ -1,4 +1,6 @@
-FROM eclipse-temurin:8-jre
+# Default mirror for regions where Docker Hub is slow or unreachable.
+ARG BASE_IMAGE=docker.m.daocloud.io/library/eclipse-temurin:8-jre
+FROM ${BASE_IMAGE}
 
 WORKDIR /app
 COPY app.jar /app/app.jar
