@@ -33,7 +33,8 @@ public class TravelManageService {
 
     public List<Map<String, Object>> listWuhanSpots() {
         return jdbcTemplate.queryForList("SELECT id, spot_name, spot_type, checked_in, remark, created_at, updated_at "
-                + "FROM travel_wuhan_spot ORDER BY checked_in ASC, updated_at DESC, id DESC");
+                + "FROM travel_wuhan_spot ORDER BY checked_in ASC, "
+                + "CASE spot_type WHEN '室外' THEN 0 WHEN '室内' THEN 1 ELSE 2 END ASC, id DESC");
     }
 
     @Transactional(rollbackFor = Exception.class)

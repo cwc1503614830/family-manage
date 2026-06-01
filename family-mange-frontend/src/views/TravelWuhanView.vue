@@ -1,21 +1,26 @@
 <template>
   <div class="travel-page-root">
-  <section class="admin-page">
-    <div class="page-head">
-      <div>
-        <p class="eyebrow">Travel Management</p>
-        <h1>武汉游</h1>
-        <p>记录武汉景点打卡情况，支持室内、室外类型。</p>
+  <section class="admin-page travel-wuhan-page">
+    <div class="travel-wuhan-page-head">
+      <h1>武汉游</h1>
+      <div class="travel-wuhan-toolbar">
+        <div class="travel-wuhan-actions">
+          <button class="primary-btn" type="button" @click="openForm()">新增景点</button>
+          <button class="ghost-btn refresh-btn" type="button" @click="loadSpots">刷新</button>
+        </div>
+        <span class="travel-stat">已打卡 {{ checkedCount }} / {{ spots.length }}</span>
       </div>
-      <button class="primary-btn" type="button" @click="openForm()">新增景点</button>
     </div>
 
-    <div class="menu-toolbar menu-filter">
-      <button class="ghost-btn refresh-btn" type="button" @click="loadSpots">刷新</button>
-      <span class="travel-stat">已打卡 {{ checkedCount }} / {{ spots.length }}</span>
-    </div>
-
-    <ResizableTable :columns="columns" :rows="spots" empty-text="暂无武汉景点">
+    <ResizableTable
+      :key="isMobile ? 'wuhan-mobile' : 'wuhan-desktop'"
+      :class="{ 'travel-wuhan-mobile-table': isMobile }"
+      :columns="tableColumns"
+      :rows="sortedSpots"
+      :row-clickable="isMobile"
+      empty-text="暂无武汉景点"
+      @row-click="openForm"
+    >
       <template #spot_type="{ row }">
         <span class="travel-tag" :class="row.spot_type === '室外' ? 'outdoor' : 'indoor'">{{ row.spot_type }}</span>
       </template>
@@ -86,26 +91,56 @@ export default {
       dialogVisible: false,
       editingId: null,
       form: emptyForm(),
+      isMobile: false,
+      mobileBreakpoint: null,
       columns: [
         { key: 'id', label: 'ID', width: 80 },
         { key: 'spot_name', label: '景点名称', width: 180 },
         { key: 'spot_type', label: '景点类型', width: 110, slot: 'spot_type' },
         { key: 'checked_in', label: '是否打卡', width: 110, slot: 'checked_in' },
         { key: 'remark', label: '备注', width: 260 },
-        { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime },
-        { key: 'actions', label: '操作', width: 150, slot: 'actions' }
+        { key: 'actions', label: '操作', width: 150, slot: 'actions' },
+        { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime }
+      ],
+      mobileColumns: [
+        { key: 'spot_name', label: '景点名称', width: 120 },
+        { key: 'spot_type', label: '景点类型', width: 96, slot: 'spot_type' },
+        { key: 'checked_in', label: '是否打卡', width: 108, slot: 'checked_in' }
       ]
     }
   },
   computed: {
+    tableColumns() {
+      return this.isMobile ? this.mobileColumns : this.columns
+    },
+    sortedSpots() {
+      return sortWuhanSpots(this.spots)
+    },
     checkedCount() {
-      return this.spots.filter(item => item.checked_in === 1).length
+      return this.sortedSpots.filter(item => item.checked_in === 1).length
     }
   },
   created() {
+    this.setupMobileListener()
     this.loadSpots()
   },
+  beforeDestroy() {
+    if (this.mobileBreakpoint) {
+      this.mobileBreakpoint.removeEventListener('change', this.syncMobileState)
+    }
+  },
   methods: {
+    setupMobileListener() {
+      if (typeof window === 'undefined' || !window.matchMedia) {
+        return
+      }
+      this.mobileBreakpoint = window.matchMedia('(max-width: 640px)')
+      this.syncMobileState()
+      this.mobileBreakpoint.addEventListener('change', this.syncMobileState)
+    },
+    syncMobileState() {
+      this.isMobile = Boolean(this.mobileBreakpoint && this.mobileBreakpoint.matches)
+    },
     async loadSpots() {
       this.spots = await listWuhanSpots()
     },
@@ -153,5 +188,30 @@ function emptyForm() {
 
 function formatDateTime(value) {
   return value ? String(value).replace('T', ' ') : '-'
+}
+
+function spotTypeOrder(type) {
+  if (type === '室外') {
+    return 0
+  }
+  if (type === '室内') {
+    return 1
+  }
+  return 2
+}
+
+function sortWuhanSpots(spots) {
+  return [...spots].sort((left, right) => {
+    const leftChecked = Number(left.checked_in === 1 ? 1 : 0)
+    const rightChecked = Number(right.checked_in === 1 ? 1 : 0)
+    if (leftChecked !== rightChecked) {
+      return leftChecked - rightChecked
+    }
+    const typeCompare = spotTypeOrder(left.spot_type) - spotTypeOrder(right.spot_type)
+    if (typeCompare !== 0) {
+      return typeCompare
+    }
+    return Number(right.id || 0) - Number(left.id || 0)
+  })
 }
 </script>

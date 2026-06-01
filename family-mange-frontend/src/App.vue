@@ -61,17 +61,19 @@
     </main>
 
     <nav class="mobile-bottom-tabs">
-      <button
-        v-for="tab in mobileTabs"
-        :key="tab.code"
-        class="tab-btn"
-        :class="{ active: activeView === tab.code }"
-        type="button"
-        @click="switchView(tab.code)"
-      >
-        <span class="tab-icon">{{ tab.icon }}</span>
-        <span class="tab-label">{{ tab.name }}</span>
-      </button>
+      <div ref="mobileTabsScroll" class="mobile-bottom-tabs-scroll">
+        <button
+          v-for="tab in mobileTabItems"
+          :key="tab.code"
+          class="tab-btn"
+          :class="{ active: activeView === tab.code }"
+          type="button"
+          @click="switchView(tab.code)"
+        >
+          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-label">{{ tab.name }}</span>
+        </button>
+      </div>
     </nav>
   </div>
 </template>
@@ -132,23 +134,39 @@ export default {
       activeView: 'asset:view',
       loginError: '',
       loginLoading: false,
-      summary: {},
-      mobileTabs: [
-        { code: 'asset:view', name: '全部资产', icon: '▦' },
-        { code: 'clothes:item', name: '衣服明细', icon: '⌥' },
-        { code: 'wealth:overview', name: '资产总览', icon: '⌂' }
-      ]
+      summary: {}
     }
   },
   computed: {
     currentViewComponent() {
       return viewMap[this.activeView] || AssetView
+    },
+    mobileTabItems() {
+      if (!this.currentUser) {
+        return []
+      }
+      return buildMobileTabItems(this.visibleMenus)
+    }
+  },
+  watch: {
+    activeView() {
+      this.$nextTick(() => this.scrollActiveMobileTabIntoView())
     }
   },
   created() {
     this.restoreSession()
   },
+  updated() {
+    this.scrollActiveMobileTabIntoView()
+  },
   methods: {
+    scrollActiveMobileTabIntoView() {
+      const scroll = this.$refs.mobileTabsScroll
+      const active = scroll && scroll.querySelector('.tab-btn.active')
+      if (scroll && active) {
+        active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+      }
+    },
     async restoreSession() {
       const token = window.localStorage.getItem('family-manage-token')
       if (!token) {
@@ -265,6 +283,37 @@ function normalizeSystemMenus(items) {
   })
   systemMenu.children.sort((a, b) => Number(a.sort_no || a.sortNo || 0) - Number(b.sort_no || b.sortNo || 0))
   return normalized
+}
+
+const MOBILE_TAB_WHITELIST = [
+  { code: 'asset:view', name: '全部资产', icon: '▦' },
+  { code: 'clothes:item', name: '衣服明细', icon: '⌥' },
+  { code: 'wealth:overview', name: '资产总览', icon: '⌂' },
+  { code: 'travel:wuhan', name: '武汉游', icon: '⚑' }
+]
+
+function buildMobileTabItems(menus) {
+  const menuMap = flattenMenuByCode(menus)
+  return MOBILE_TAB_WHITELIST.map(tab => ({
+    code: tab.code,
+    name: menuMap[tab.code]?.name || tab.name,
+    icon: menuMap[tab.code]?.icon || tab.icon
+  }))
+}
+
+function flattenMenuByCode(menus) {
+  const map = {}
+  const walk = items => {
+    ;(items || []).forEach(item => {
+      if (item.children && item.children.length) {
+        walk(item.children)
+      } else if (item.code) {
+        map[item.code] = item
+      }
+    })
+  }
+  walk(menus)
+  return map
 }
 
 function firstLeafMenu(menus) {
