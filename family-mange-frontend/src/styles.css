@@ -334,6 +334,97 @@ button:disabled {
   line-height: 1;
 }
 
+.wealth-overview-page .wealth-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wealth-overview-page .wealth-page-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.1;
+}
+
+.wealth-overview-page .wealth-head-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wealth-overview-page .wealth-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wealth-overview-page .wealth-disposable-panel strong {
+  color: #1d6b4f;
+}
+
+.wealth-overview-page .wealth-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.wealth-overview-page .wealth-add-btn {
+  flex: 0 0 auto;
+}
+
+.wealth-overview-page .wealth-mobile-table {
+  overflow: hidden;
+}
+
+.wealth-overview-page .wealth-mobile-table table {
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.wealth-overview-page .wealth-mobile-table col:nth-child(1) {
+  width: 40% !important;
+}
+
+.wealth-overview-page .wealth-mobile-table col:nth-child(2) {
+  width: 28% !important;
+}
+
+.wealth-overview-page .wealth-mobile-table col:nth-child(3) {
+  width: 32% !important;
+}
+
+.wealth-overview-page .wealth-mobile-table th,
+.wealth-overview-page .wealth-mobile-table td {
+  padding: 14px 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: middle;
+}
+
+.wealth-overview-page .wealth-mobile-table .truncate {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.wealth-overview-page .wealth-mobile-table tbody tr {
+  min-height: 48px;
+}
+
+.wealth-overview-page .wealth-mobile-table .column-resizer {
+  display: none;
+}
+
 .travel-stat {
   margin-left: auto;
   color: var(--ink-muted);
@@ -1287,6 +1378,15 @@ button:disabled {
   overflow: hidden;
 }
 
+.resizable-table tr.row-clickable {
+  cursor: pointer;
+}
+
+.resizable-table tr.row-clickable:hover td {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+
 .resizable-table .th-label {
   display: block;
   overflow: hidden;
@@ -1927,6 +2027,66 @@ body.modal-open {
     font-size: 24px;
   }
 
+  .wealth-overview-page .wealth-page-head {
+    gap: 12px;
+  }
+
+  .wealth-overview-page .wealth-page-head h1 {
+    font-size: 26px;
+  }
+
+  .wealth-overview-page .wealth-head-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+  }
+
+  .wealth-overview-page .wealth-summary-grid {
+    grid-column: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .wealth-overview-page .wealth-head-actions {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .wealth-overview-page .wealth-head-actions .primary-btn,
+  .wealth-overview-page .wealth-head-actions .ghost-btn {
+    min-height: 40px;
+    flex: 0 0 auto;
+    padding: 0 16px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .wealth-overview-page .wealth-total-panel {
+    min-width: 0;
+    padding: 12px 14px;
+  }
+
+  .wealth-overview-page .wealth-total-panel span {
+    font-size: 12px;
+  }
+
+  .wealth-overview-page .wealth-total-panel strong {
+    margin-top: 6px;
+    font-size: 20px;
+  }
+
+  .wealth-overview-page .wealth-mobile-table th,
+  .wealth-overview-page .wealth-mobile-table td {
+    padding: 16px 12px;
+    font-size: 14px;
+  }
+
   .menu-toolbar {
     margin-top: 16px;
     gap: 8px;
@@ -1958,6 +2118,29 @@ body.modal-open {
 
   .page-head h1 {
     font-size: 22px;
+  }
+
+  .wealth-overview-page .wealth-head-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .wealth-overview-page .wealth-summary-grid,
+  .wealth-overview-page .wealth-head-actions {
+    grid-column: 1;
+  }
+
+  .wealth-overview-page .wealth-head-actions {
+    grid-row: 2;
+    justify-content: stretch;
+  }
+
+  .wealth-overview-page .wealth-head-actions .primary-btn,
+  .wealth-overview-page .wealth-head-actions .ghost-btn {
+    flex: 1;
+  }
+
+  .wealth-overview-page .wealth-mobile-table table {
+    min-width: 0;
   }
 
   .admin-table table {

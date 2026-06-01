@@ -35,7 +35,7 @@ public class WealthManageService {
                 + "FROM wealth_asset a "
                 + "LEFT JOIN wealth_type t ON t.id = a.type_id "
                 + "LEFT JOIN sys_user u ON u.id = a.owner_user_id "
-                + "ORDER BY a.updated_at DESC, a.id DESC");
+                + "ORDER BY t.asset_type ASC, a.id DESC");
     }
 
     @Transactional(rollbackFor = Exception.class)

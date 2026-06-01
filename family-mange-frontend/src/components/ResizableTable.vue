@@ -21,7 +21,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row[rowKey]">
+        <tr
+          v-for="row in rows"
+          :key="row[rowKey]"
+          :class="{ 'row-clickable': rowClickable }"
+          @click="handleRowClick(row, $event)"
+        >
           <td v-for="column in columns" :key="column.key">
             <slot v-if="column.slot" :name="column.slot" :row="row"></slot>
             <span v-else class="truncate">{{ formatCell(row, column) }}</span>
@@ -54,6 +59,10 @@ export default {
     emptyText: {
       type: String,
       default: '暂无数据'
+    },
+    rowClickable: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -70,6 +79,15 @@ export default {
     this.stopResize()
   },
   methods: {
+    handleRowClick(row, event) {
+      if (!this.rowClickable) {
+        return
+      }
+      if (event.target.closest('button, a, input, select, textarea, label')) {
+        return
+      }
+      this.$emit('row-click', row)
+    },
     formatCell(row, column) {
       if (typeof column.formatter === 'function') {
         return column.formatter(row[column.key], row)

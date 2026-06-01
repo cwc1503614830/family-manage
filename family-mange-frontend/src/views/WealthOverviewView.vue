@@ -1,23 +1,34 @@
 <template>
-  <section class="admin-page">
-    <div class="page-head">
-      <div>
-        <p class="eyebrow">Wealth Management</p>
-        <h1>资产总览</h1>
-        <p>维护家庭财富资产、类型、金额和持有人。</p>
+  <section class="admin-page wealth-overview-page">
+    <div class="wealth-page-head">
+      <h1>资产总览</h1>
+      <div class="wealth-head-toolbar">
+        <div class="wealth-summary-grid">
+          <div class="wealth-total-panel">
+            <span>总资产</span>
+            <strong>{{ moneyText(totalAssets) }}</strong>
+          </div>
+          <div class="wealth-total-panel wealth-disposable-panel">
+            <span>可支配资产</span>
+            <strong>{{ moneyText(disposableAssets) }}</strong>
+          </div>
+        </div>
+        <div class="wealth-head-actions">
+          <button class="primary-btn wealth-add-btn" type="button" @click="openForm()">新增资产</button>
+          <button class="ghost-btn refresh-btn" type="button" @click="bootstrap">刷新</button>
+        </div>
       </div>
-      <div class="wealth-total-panel">
-        <span>总资产</span>
-        <strong>{{ moneyText(totalAssets) }}</strong>
-      </div>
-      <button class="primary-btn" type="button" @click="openForm()">新增资产</button>
     </div>
 
-    <div class="menu-toolbar menu-filter">
-      <button class="ghost-btn refresh-btn" type="button" @click="bootstrap">刷新</button>
-    </div>
-
-    <ResizableTable :columns="columns" :rows="assets" empty-text="暂无财富资产">
+    <ResizableTable
+      :key="isMobile ? 'wealth-mobile' : 'wealth-desktop'"
+      :class="{ 'wealth-mobile-table': isMobile }"
+      :columns="tableColumns"
+      :rows="sortedAssets"
+      :row-clickable="isMobile"
+      empty-text="暂无财富资产"
+      @row-click="openForm"
+    >
       <template #amount="{ row }">
         <strong>{{ moneyText(row.amount) }}</strong>
       </template>
@@ -104,6 +115,8 @@ export default {
       dialogVisible: false,
       editingId: null,
       form: emptyForm(),
+      isMobile: false,
+      mobileBreakpoint: null,
       columns: [
         { key: 'id', label: 'ID', width: 90 },
         { key: 'asset_name', label: '资产名称', width: 180 },
@@ -117,18 +130,54 @@ export default {
         { key: 'updated_by', label: '更新人', width: 100 },
         { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime },
         { key: 'actions', label: '操作', width: 150, slot: 'actions' }
+      ],
+      mobileColumns: [
+        { key: 'asset_name', label: '资产名称', width: 120 },
+        { key: 'asset_type', label: '资产类型', width: 96 },
+        { key: 'amount', label: '金额', width: 108, slot: 'amount' }
       ]
     }
   },
   created() {
     this.bootstrap()
+    this.setupMobileListener()
+  },
+  beforeDestroy() {
+    if (this.mobileBreakpoint) {
+      this.mobileBreakpoint.removeEventListener('change', this.syncMobileState)
+    }
   },
   computed: {
+    tableColumns() {
+      return this.isMobile ? this.mobileColumns : this.columns
+    },
+    sortedAssets() {
+      return sortAssetsByType(this.assets)
+    },
     totalAssets() {
-      return this.assets.reduce((total, asset) => total + Number(asset.amount || 0), 0)
+      return this.sortedAssets.reduce((total, asset) => total + Number(asset.amount || 0), 0)
+    },
+    disposableAssets() {
+      return this.sortedAssets.reduce((total, asset) => {
+        if (!isDisposableAsset(asset)) {
+          return total
+        }
+        return total + Number(asset.amount || 0)
+      }, 0)
     }
   },
   methods: {
+    setupMobileListener() {
+      if (typeof window === 'undefined' || !window.matchMedia) {
+        return
+      }
+      this.mobileBreakpoint = window.matchMedia('(max-width: 640px)')
+      this.syncMobileState()
+      this.mobileBreakpoint.addEventListener('change', this.syncMobileState)
+    },
+    syncMobileState() {
+      this.isMobile = Boolean(this.mobileBreakpoint && this.mobileBreakpoint.matches)
+    },
     async bootstrap() {
       await Promise.all([this.loadAssets(), this.loadOptions()])
     },
@@ -200,5 +249,21 @@ function formatDate(value) {
 
 function formatDateTime(value) {
   return value ? String(value).replace('T', ' ') : '-'
+}
+
+const DISPOSABLE_ASSET_TYPES = new Set(['微信', '支付宝', '银行卡', '基金', '现金'])
+
+function isDisposableAsset(asset) {
+  return DISPOSABLE_ASSET_TYPES.has(String(asset.asset_type || '').trim())
+}
+
+function sortAssetsByType(assets) {
+  return [...assets].sort((left, right) => {
+    const typeCompare = String(left.asset_type || '').localeCompare(String(right.asset_type || ''), 'zh-CN')
+    if (typeCompare !== 0) {
+      return typeCompare
+    }
+    return Number(right.id || 0) - Number(left.id || 0)
+  })
 }
 </script>
