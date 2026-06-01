@@ -30,12 +30,12 @@ public class WealthManageService {
     }
 
     public List<Map<String, Object>> listAssets() {
-        return jdbcTemplate.queryForList("SELECT a.id, a.asset_name, a.type_id, t.asset_type, a.amount, a.record_date, "
+        return jdbcTemplate.queryForList("SELECT a.id, a.asset_name, a.type_id, t.asset_type, t.sort_num type_sort_num, a.amount, a.record_date, "
                 + "a.owner_user_id, u.display_name owner_name, a.remark, a.created_by, a.created_at, a.updated_by, a.updated_at "
                 + "FROM wealth_asset a "
                 + "LEFT JOIN wealth_type t ON t.id = a.type_id "
                 + "LEFT JOIN sys_user u ON u.id = a.owner_user_id "
-                + "ORDER BY t.asset_type ASC, a.id DESC");
+                + "ORDER BY COALESCE(t.sort_num, 9999) ASC, a.id DESC");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -76,7 +76,7 @@ public class WealthManageService {
     }
 
     public List<Map<String, Object>> listTypes() {
-        return jdbcTemplate.queryForList("SELECT id, asset_type, remark FROM wealth_type ORDER BY id DESC");
+        return jdbcTemplate.queryForList("SELECT id, asset_type, remark, sort_num FROM wealth_type ORDER BY COALESCE(sort_num, 9999) ASC, id ASC");
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -110,13 +110,13 @@ public class WealthManageService {
 
     public Map<String, Object> getOptions() {
         Map<String, Object> options = new HashMap<String, Object>();
-        options.put("types", jdbcTemplate.queryForList("SELECT id, asset_type FROM wealth_type ORDER BY id"));
+        options.put("types", jdbcTemplate.queryForList("SELECT id, asset_type, sort_num FROM wealth_type ORDER BY COALESCE(sort_num, 9999) ASC, id ASC"));
         options.put("users", jdbcTemplate.queryForList("SELECT id, username, display_name FROM sys_user WHERE status = 1 ORDER BY id"));
         return options;
     }
 
     private Map<String, Object> getAsset(Long id) {
-        return jdbcTemplate.queryForMap("SELECT a.id, a.asset_name, a.type_id, t.asset_type, a.amount, a.record_date, "
+        return jdbcTemplate.queryForMap("SELECT a.id, a.asset_name, a.type_id, t.asset_type, t.sort_num type_sort_num, a.amount, a.record_date, "
                 + "a.owner_user_id, u.display_name owner_name, a.remark, a.created_by, a.created_at, a.updated_by, a.updated_at "
                 + "FROM wealth_asset a "
                 + "LEFT JOIN wealth_type t ON t.id = a.type_id "
@@ -124,7 +124,7 @@ public class WealthManageService {
     }
 
     private Map<String, Object> getType(Long id) {
-        return jdbcTemplate.queryForMap("SELECT id, asset_type, remark FROM wealth_type WHERE id = ?", id);
+        return jdbcTemplate.queryForMap("SELECT id, asset_type, remark, sort_num FROM wealth_type WHERE id = ?", id);
     }
 
     private void validateAsset(WealthAssetRequest request, boolean requireCreateFields) {

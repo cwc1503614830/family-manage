@@ -151,6 +151,7 @@ CREATE TABLE IF NOT EXISTS wealth_type (
   id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
   asset_type VARCHAR(80) NOT NULL COMMENT '资产类型',
   remark VARCHAR(300) DEFAULT NULL COMMENT '备注',
+  sort_num INT DEFAULT NULL COMMENT '排序',
   PRIMARY KEY (id),
   UNIQUE KEY uk_asset_type (asset_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财富资产类型';
@@ -174,12 +175,15 @@ CREATE TABLE IF NOT EXISTS wealth_asset (
   KEY idx_record_date (record_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财富资产总览';
 
-INSERT IGNORE INTO wealth_type (asset_type, remark) VALUES
-('现金', '默认资产类型'),
-('微信', '默认资产类型'),
-('支付宝', '默认资产类型'),
-('黄金', '默认资产类型'),
-('基金', '默认资产类型');
+INSERT IGNORE INTO wealth_type (asset_type, remark, sort_num) VALUES
+('支付宝', '默认资产类型', 1),
+('微信', '默认资产类型', 2),
+('现金', '默认资产类型', 3),
+('基金', '默认资产类型', 4),
+('银行卡', '默认资产类型', 5),
+('公积金', '默认资产类型', 6),
+('黄金', '默认资产类型', 7),
+('债权', '默认资产类型', 8);
 
 INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES
 ('全部资产', 'asset:view', '▦', '/assets', 'AssetConsole', '', 10, 1),

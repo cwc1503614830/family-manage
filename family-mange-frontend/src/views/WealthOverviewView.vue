@@ -38,8 +38,13 @@
       </template>
     </ResizableTable>
 
-    <div v-if="dialogVisible" class="modal-mask" @click.self="closeForm">
-      <form class="asset-form" @submit.prevent="submitForm">
+    <div
+      v-if="dialogVisible"
+      ref="wealthAssetModal"
+      class="modal-mask wealth-asset-modal"
+      @click.self="closeForm"
+    >
+      <form class="asset-form asset-form-sheet" @submit.prevent="submitForm">
         <div class="form-head">
           <div>
             <p class="eyebrow">Wealth Asset</p>
@@ -48,6 +53,7 @@
           <button class="icon-btn" type="button" title="关闭" @click="closeForm">×</button>
         </div>
 
+        <div class="asset-form-body">
         <div class="form-grid">
           <label>
             <span>资产名称</span>
@@ -83,6 +89,7 @@
             <span>备注</span>
             <textarea v-model.trim="form.remark" rows="3" placeholder="记录账户、归属或资产说明"></textarea>
           </label>
+        </div>
         </div>
 
         <div class="form-actions">
@@ -125,11 +132,11 @@ export default {
         { key: 'record_date', label: '入账日期', width: 120, formatter: formatDate },
         { key: 'owner_name', label: '持有人', width: 120 },
         { key: 'remark', label: '备注', width: 220 },
+        { key: 'actions', label: '操作', width: 150, slot: 'actions' },
         { key: 'created_by', label: '创建人', width: 100 },
         { key: 'created_at', label: '创建时间', width: 160, formatter: formatDateTime },
         { key: 'updated_by', label: '更新人', width: 100 },
-        { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime },
-        { key: 'actions', label: '操作', width: 150, slot: 'actions' }
+        { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime }
       ],
       mobileColumns: [
         { key: 'asset_name', label: '资产名称', width: 120 },
@@ -146,6 +153,7 @@ export default {
     if (this.mobileBreakpoint) {
       this.mobileBreakpoint.removeEventListener('change', this.syncMobileState)
     }
+    this.teardownMobileFormViewport()
   },
   computed: {
     tableColumns() {
@@ -203,9 +211,126 @@ export default {
           }
         : emptyForm()
       this.dialogVisible = true
+      this.$nextTick(() => {
+        this.mountWealthModalToBody()
+        this.setupMobileFormViewport()
+      })
     },
     closeForm() {
+      this.teardownMobileFormViewport()
       this.dialogVisible = false
+    },
+    mountWealthModalToBody() {
+      const mask = this.$refs.wealthAssetModal
+      if (!mask || mask.parentNode === document.body) {
+        return
+      }
+      document.body.appendChild(mask)
+    },
+    setupMobileFormViewport() {
+      if (!this.isMobile || typeof window === 'undefined') {
+        return
+      }
+      document.body.classList.add('wealth-modal-open')
+      this.updateMobileFormViewport()
+      this._onMobileFormViewportChange = () => this.updateMobileFormViewport()
+      window.addEventListener('resize', this._onMobileFormViewportChange)
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', this._onMobileFormViewportChange)
+        window.visualViewport.addEventListener('scroll', this._onMobileFormViewportChange)
+      }
+      this._onMobileFormFocusIn = event => {
+        const target = event.target
+        if (!target || !target.closest || !target.closest('.wealth-asset-modal')) {
+          return
+        }
+        if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+          return
+        }
+        window.setTimeout(() => {
+          this.updateMobileFormViewport()
+          this.scrollFormFieldIntoView(target)
+        }, 360)
+      }
+      document.addEventListener('focusin', this._onMobileFormFocusIn)
+    },
+    teardownMobileFormViewport() {
+      if (typeof window === 'undefined') {
+        return
+      }
+      document.body.classList.remove('wealth-modal-open')
+      if (this._onMobileFormViewportChange) {
+        window.removeEventListener('resize', this._onMobileFormViewportChange)
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', this._onMobileFormViewportChange)
+          window.visualViewport.removeEventListener('scroll', this._onMobileFormViewportChange)
+        }
+      }
+      if (this._onMobileFormFocusIn) {
+        document.removeEventListener('focusin', this._onMobileFormFocusIn)
+      }
+      this._onMobileFormViewportChange = null
+      this._onMobileFormFocusIn = null
+      this.resetMobileFormViewportStyles()
+    },
+    getWealthAssetModal() {
+      return this.$refs.wealthAssetModal || null
+    },
+    resetMobileFormViewportStyles() {
+      const mask = this.getWealthAssetModal()
+      if (!mask) {
+        return
+      }
+      ;['top', 'left', 'width', 'height', 'right', 'bottom', 'padding', 'boxSizing'].forEach(prop => {
+        mask.style[prop] = ''
+      })
+      mask.style.removeProperty('--wealth-modal-height')
+      mask.style.removeProperty('--wealth-keyboard-inset')
+    },
+    updateMobileFormViewport() {
+      const mask = this.getWealthAssetModal()
+      if (!mask || !this.isMobile) {
+        return
+      }
+      const viewport = window.visualViewport
+      const layoutTop = viewport ? viewport.offsetTop : 0
+      const layoutLeft = viewport ? viewport.offsetLeft : 0
+      const layoutWidth = viewport ? viewport.width : window.innerWidth
+      const layoutHeight = viewport ? viewport.height : window.innerHeight
+      const edgeGap = 8
+
+      mask.style.position = 'fixed'
+      mask.style.top = `${layoutTop}px`
+      mask.style.left = `${layoutLeft}px`
+      mask.style.width = `${layoutWidth}px`
+      mask.style.height = `${layoutHeight}px`
+      mask.style.right = 'auto'
+      mask.style.bottom = 'auto'
+      mask.style.padding = `${edgeGap}px`
+      mask.style.boxSizing = 'border-box'
+
+      const formHeight = Math.max(240, layoutHeight - edgeGap * 2)
+      mask.style.setProperty('--wealth-modal-height', `${formHeight}px`)
+      mask.style.setProperty('--wealth-keyboard-inset', '0px')
+    },
+    scrollFormFieldIntoView(field) {
+      const form = field.closest('.asset-form-sheet')
+      const body = form && form.querySelector('.asset-form-body')
+      if (!body) {
+        field.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        return
+      }
+      const bodyRect = body.getBoundingClientRect()
+      const fieldRect = field.getBoundingClientRect()
+      const actions = form.querySelector('.form-actions')
+      const reservedBottom = actions ? actions.offsetHeight + 16 : 16
+      const visibleBottom = bodyRect.bottom - reservedBottom
+      if (fieldRect.bottom > visibleBottom) {
+        body.scrollTop += fieldRect.bottom - visibleBottom
+      }
+      if (fieldRect.top < bodyRect.top + 12) {
+        body.scrollTop -= bodyRect.top + 12 - fieldRect.top
+      }
     },
     async submitForm() {
       const payload = { ...this.form }
@@ -259,9 +384,10 @@ function isDisposableAsset(asset) {
 
 function sortAssetsByType(assets) {
   return [...assets].sort((left, right) => {
-    const typeCompare = String(left.asset_type || '').localeCompare(String(right.asset_type || ''), 'zh-CN')
-    if (typeCompare !== 0) {
-      return typeCompare
+    const leftSort = Number(left.type_sort_num ?? left.sort_num ?? 9999)
+    const rightSort = Number(right.type_sort_num ?? right.sort_num ?? 9999)
+    if (leftSort !== rightSort) {
+      return leftSort - rightSort
     }
     return Number(right.id || 0) - Number(left.id || 0)
   })

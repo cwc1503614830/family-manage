@@ -45,6 +45,7 @@ public class DatabaseInitializer implements ApplicationRunner {
         }
         initClothesTables();
         initWealthTables();
+        ensureWealthTypeSortNum();
         initTravelTables();
         seedAuthData();
     }
@@ -224,6 +225,7 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
                 + "asset_type VARCHAR(80) NOT NULL COMMENT '资产类型',"
                 + "remark VARCHAR(300) DEFAULT NULL COMMENT '备注',"
+                + "sort_num INT DEFAULT NULL COMMENT '排序',"
                 + "PRIMARY KEY (id),"
                 + "UNIQUE KEY uk_asset_type (asset_type)"
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财富资产类型'");
@@ -248,12 +250,28 @@ public class DatabaseInitializer implements ApplicationRunner {
 
         Integer typeCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM wealth_type", Integer.class);
         if (typeCount != null && typeCount == 0) {
-            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "现金", "默认资产类型");
-            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "微信", "默认资产类型");
-            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "支付宝", "默认资产类型");
-            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "黄金", "默认资产类型");
-            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark) VALUES (?, ?)", "基金", "默认资产类型");
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "支付宝", "默认资产类型", 1);
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "微信", "默认资产类型", 2);
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "现金", "默认资产类型", 3);
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "基金", "默认资产类型", 4);
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "银行卡", "默认资产类型", 5);
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "公积金", "默认资产类型", 6);
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "黄金", "默认资产类型", 7);
+            jdbcTemplate.update("INSERT INTO wealth_type (asset_type, remark, sort_num) VALUES (?, ?, ?)", "债权", "默认资产类型", 8);
         }
+    }
+
+    private void ensureWealthTypeSortNum() {
+        addColumnIfMissing("wealth_type", "sort_num",
+                "ALTER TABLE wealth_type ADD COLUMN sort_num INT DEFAULT NULL COMMENT '排序' AFTER remark");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 1 WHERE asset_type = '支付宝' AND sort_num IS NULL");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 2 WHERE asset_type = '微信' AND sort_num IS NULL");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 3 WHERE asset_type = '现金' AND sort_num IS NULL");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 4 WHERE asset_type = '基金' AND sort_num IS NULL");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 5 WHERE asset_type = '银行卡' AND sort_num IS NULL");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 6 WHERE asset_type = '公积金' AND sort_num IS NULL");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 7 WHERE asset_type = '黄金' AND sort_num IS NULL");
+        jdbcTemplate.update("UPDATE wealth_type SET sort_num = 8 WHERE asset_type = '债权' AND sort_num IS NULL");
     }
 
     private void initTravelTables() {

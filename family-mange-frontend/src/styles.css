@@ -1992,6 +1992,65 @@ body.modal-open {
     padding: 12px;
   }
 
+  body.wealth-modal-open {
+    overflow: hidden;
+  }
+
+  body.wealth-modal-open .mobile-bottom-tabs {
+    display: none !important;
+  }
+
+  .modal-mask.wealth-asset-modal {
+    z-index: 5000;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  .modal-mask.wealth-asset-modal .asset-form-sheet {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    height: var(--wealth-modal-height, 100%);
+    max-height: var(--wealth-modal-height, 100%);
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 16px;
+  }
+
+  .modal-mask.wealth-asset-modal .asset-form-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding-bottom: 20px;
+  }
+
+  .modal-mask.wealth-asset-modal .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-mask.wealth-asset-modal .form-head {
+    flex-shrink: 0;
+  }
+
+  .modal-mask.wealth-asset-modal .form-actions {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding-top: 14px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    background: var(--card-bg);
+    box-shadow: 0 -10px 28px rgba(28, 22, 16, 0.08);
+  }
+
+  .modal-mask.wealth-asset-modal .form-actions .ghost-btn,
+  .modal-mask.wealth-asset-modal .form-actions .primary-btn {
+    min-height: 44px;
+  }
+
   .check-grid {
     grid-template-columns: 1fr;
     padding: 10px;
