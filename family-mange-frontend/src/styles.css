@@ -471,6 +471,107 @@ button:disabled {
   display: none;
 }
 
+.clothes-item-list-page .clothes-item-mobile-table {
+  overflow: hidden;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table table {
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table col:nth-child(1) {
+  width: 23% !important;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table col:nth-child(2) {
+  width: 21% !important;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table col:nth-child(3) {
+  width: 17% !important;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table col:nth-child(4) {
+  width: 39% !important;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(3) .th-label {
+  padding-right: 4px;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(1),
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(2),
+.clothes-item-list-page .clothes-item-mobile-table td:nth-child(1),
+.clothes-item-list-page .clothes-item-mobile-table td:nth-child(2) {
+  padding-left: 8px;
+  padding-right: 6px;
+  font-size: 12px;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(4),
+.clothes-item-list-page .clothes-item-mobile-table td:nth-child(4) {
+  padding-right: 10px;
+}
+
+.clothes-item-list-page .clothes-item-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.clothes-item-list-page .clothes-item-page-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.1;
+}
+
+.clothes-item-list-page .clothes-item-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.clothes-item-list-page .clothes-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th,
+.clothes-item-list-page .clothes-item-mobile-table td {
+  padding: 14px 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: middle;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table .truncate {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table tbody tr {
+  min-height: 52px;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table .column-resizer {
+  display: none;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table .clothes-thumb {
+  width: 40px;
+  height: 40px;
+}
+
 .travel-wuhan-page .travel-wuhan-page-head {
   display: flex;
   flex-direction: column;
@@ -2277,6 +2378,58 @@ body.modal-open {
     text-align: right;
     font-size: 13px;
     white-space: nowrap;
+  }
+
+  .clothes-item-list-page .clothes-item-page-head {
+    gap: 12px;
+  }
+
+  .clothes-item-list-page .clothes-item-page-head h1 {
+    font-size: 26px;
+  }
+
+  .clothes-item-list-page .clothes-item-toolbar {
+    justify-content: flex-start;
+  }
+
+  .clothes-item-list-page .clothes-item-actions {
+    gap: 10px;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .clothes-item-list-page .clothes-item-actions .primary-btn,
+  .clothes-item-list-page .clothes-item-actions .ghost-btn {
+    min-height: 40px;
+    flex: 0 0 auto;
+    padding: 0 16px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .clothes-item-list-page .clothes-item-mobile-table th,
+  .clothes-item-list-page .clothes-item-mobile-table td {
+    padding: 14px 8px;
+    font-size: 13px;
+  }
+
+  .clothes-item-list-page .clothes-item-mobile-table th:nth-child(1),
+  .clothes-item-list-page .clothes-item-mobile-table th:nth-child(2),
+  .clothes-item-list-page .clothes-item-mobile-table td:nth-child(1),
+  .clothes-item-list-page .clothes-item-mobile-table td:nth-child(2) {
+    padding-left: 8px;
+    padding-right: 4px;
+    font-size: 12px;
+  }
+
+  .clothes-item-list-page .clothes-item-mobile-table .clothes-thumb {
+    width: 36px;
+    height: 36px;
+  }
+
+  .clothes-item-list-page .clothes-item-mobile-table th:nth-child(4),
+  .clothes-item-list-page .clothes-item-mobile-table td:nth-child(4) {
+    font-size: 13px;
   }
 
   .menu-toolbar {

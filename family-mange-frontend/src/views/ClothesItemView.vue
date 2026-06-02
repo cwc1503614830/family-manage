@@ -1,20 +1,25 @@
 <template>
   <div class="clothes-item-page">
-    <section class="admin-page">
-      <div class="page-head">
-        <div>
-          <p class="eyebrow">Clothes Management</p>
-          <h1>衣服明细</h1>
-          <p>登记家庭成员衣服，并维护类型、位置、拥有者和过期时间。</p>
+    <section class="admin-page clothes-item-list-page">
+      <div class="clothes-item-page-head">
+        <h1>衣服明细</h1>
+        <div class="clothes-item-toolbar">
+          <div class="clothes-item-actions">
+            <button class="primary-btn" type="button" @click="openForm()">新增衣服</button>
+            <button class="ghost-btn refresh-btn" type="button" @click="bootstrap">刷新</button>
+          </div>
         </div>
-        <button class="primary-btn" type="button" @click="openForm()">新增衣服</button>
       </div>
 
-      <div class="menu-toolbar menu-filter">
-        <button class="ghost-btn refresh-btn" type="button" @click="bootstrap">刷新</button>
-      </div>
-
-      <ResizableTable :columns="columns" :rows="items" empty-text="暂无衣服明细">
+      <ResizableTable
+        :key="isMobile ? 'clothes-mobile' : 'clothes-desktop'"
+        :class="{ 'clothes-item-mobile-table': isMobile }"
+        :columns="tableColumns"
+        :rows="items"
+        :row-clickable="isMobile"
+        empty-text="暂无衣服明细"
+        @row-click="openForm"
+      >
         <template #image="{ row }">
           <div class="clothes-image-cell">
             <img
@@ -22,7 +27,7 @@
               :src="row.image_url"
               alt="衣服图片"
               class="clothes-thumb"
-              @click="previewImage(row.image_url)"
+              @click.stop="previewImage(row.image_url)"
             />
             <span v-else class="clothes-no-image">无</span>
           </div>
@@ -166,6 +171,8 @@ export default {
       uploading: false,
       uploadError: '',
       form: emptyForm(),
+      isMobile: false,
+      mobileBreakpoint: null,
       columns: [
         { key: 'clothes_name', label: '衣服名称', width: 150 },
         { key: 'type_code', label: '类型编码', width: 120 },
@@ -177,26 +184,50 @@ export default {
         { key: 'image_url', label: '图片', width: 90, slot: 'image' },
         { key: 'owner_name', label: '拥有者', width: 120 },
         { key: 'remark', label: '备注', width: 180 },
+        { key: 'actions', label: '操作', width: 150, slot: 'actions' },
         { key: 'created_by', label: '创建人', width: 100 },
         { key: 'created_at', label: '创建时间', width: 160, formatter: formatDateTime },
         { key: 'updated_by', label: '更新人', width: 100 },
-        { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime },
-        { key: 'actions', label: '操作', width: 150, slot: 'actions' }
+        { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime }
+      ],
+      mobileColumns: [
+        { key: 'clothes_name', label: '衣服名称', width: 72 },
+        { key: 'area_name', label: '区域名称', width: 68 },
+        { key: 'image_url', label: '图片', width: 52, slot: 'image' },
+        { key: 'owner_name', label: '拥有者', width: 96 }
       ]
     }
   },
   computed: {
+    tableColumns() {
+      return this.isMobile ? this.mobileColumns : this.columns
+    },
     totalPages() {
       return Math.max(1, Math.ceil(this.total / this.pageSize))
     }
   },
   created() {
+    this.setupMobileListener()
     this.bootstrap()
   },
   beforeDestroy() {
+    if (this.mobileBreakpoint) {
+      this.mobileBreakpoint.removeEventListener('change', this.syncMobileState)
+    }
     document.body.classList.remove('modal-open')
   },
   methods: {
+    setupMobileListener() {
+      if (typeof window === 'undefined' || !window.matchMedia) {
+        return
+      }
+      this.mobileBreakpoint = window.matchMedia('(max-width: 640px)')
+      this.syncMobileState()
+      this.mobileBreakpoint.addEventListener('change', this.syncMobileState)
+    },
+    syncMobileState() {
+      this.isMobile = Boolean(this.mobileBreakpoint && this.mobileBreakpoint.matches)
+    },
     async bootstrap() {
       await Promise.all([this.loadItems(), this.loadOptions()])
     },

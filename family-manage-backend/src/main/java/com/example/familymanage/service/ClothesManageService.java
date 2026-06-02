@@ -24,9 +24,11 @@ import java.util.Map;
 public class ClothesManageService {
 
     private final JdbcTemplate jdbcTemplate;
+    private final MinioService minioService;
 
-    public ClothesManageService(JdbcTemplate jdbcTemplate) {
+    public ClothesManageService(JdbcTemplate jdbcTemplate, MinioService minioService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.minioService = minioService;
     }
 
     private static final String ITEM_SELECT_SQL = "SELECT i.id, i.clothes_name, i.type_code, t.type_name, i.area_code, l.area_name, "
@@ -48,6 +50,7 @@ public class ClothesManageService {
         List<Map<String, Object>> records = jdbcTemplate.queryForList(
                 ITEM_SELECT_SQL + "ORDER BY i.updated_at DESC, i.id DESC LIMIT ? OFFSET ?",
                 safeSize, offset);
+        records.forEach(this::normalizeItemImageUrl);
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("records", records);
         result.put("total", total);
@@ -70,7 +73,7 @@ public class ClothesManageService {
             statement.setString(3, request.getAreaCode().trim());
             statement.setDate(4, toDate(request.getPurchaseTime()));
             statement.setDate(5, toDate(request.getExpireTime()));
-            statement.setString(6, StringUtils.hasText(request.getImageUrl()) ? request.getImageUrl().trim() : "");
+            statement.setString(6, normalizeStoredImageUrl(request.getImageUrl()));
             statement.setLong(7, request.getOwnerUserId());
             statement.setString(8, request.getRemark());
             statement.setString(9, operator);
@@ -85,7 +88,7 @@ public class ClothesManageService {
         validateItem(request, false);
         jdbcTemplate.update("UPDATE clothes_item SET type_code = ?, area_code = ?, expire_time = ?, image_url = ?, remark = ?, updated_by = ?, updated_at = NOW() WHERE id = ?",
                 request.getTypeCode().trim(), request.getAreaCode().trim(), toDate(request.getExpireTime()),
-                StringUtils.hasText(request.getImageUrl()) ? request.getImageUrl().trim() : "",
+                normalizeStoredImageUrl(request.getImageUrl()),
                 request.getRemark(), currentUsername(), id);
         return getItem(id);
     }
@@ -173,7 +176,21 @@ public class ClothesManageService {
     }
 
     private Map<String, Object> getItem(Long id) {
-        return jdbcTemplate.queryForMap(ITEM_SELECT_SQL + "WHERE i.id = ?", id);
+        Map<String, Object> item = jdbcTemplate.queryForMap(ITEM_SELECT_SQL + "WHERE i.id = ?", id);
+        normalizeItemImageUrl(item);
+        return item;
+    }
+
+    private void normalizeItemImageUrl(Map<String, Object> item) {
+        if (item == null || !item.containsKey("image_url")) {
+            return;
+        }
+        Object imageUrl = item.get("image_url");
+        item.put("image_url", minioService.normalizePublicUrl(imageUrl == null ? "" : String.valueOf(imageUrl)));
+    }
+
+    private String normalizeStoredImageUrl(String imageUrl) {
+        return minioService.normalizePublicUrl(imageUrl);
     }
 
     private Map<String, Object> getType(Long id) {

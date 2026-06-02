@@ -29,6 +29,9 @@ public class AuthInterceptor implements HandlerInterceptor {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod()) || request.getRequestURI().startsWith("/api/auth/login")) {
             return true;
         }
+        if ("GET".equalsIgnoreCase(request.getMethod()) && request.getRequestURI().contains("/api/files/view/")) {
+            return true;
+        }
         try {
             AuthUser user = authService.requireByToken(resolveToken(request));
             AuthContext.set(user);
