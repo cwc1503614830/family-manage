@@ -7,19 +7,37 @@
           <div class="clothes-item-actions">
             <button class="primary-btn" type="button" @click="openForm()">新增衣服</button>
             <button class="ghost-btn refresh-btn" type="button" @click="bootstrap">刷新</button>
+            <button
+              class="ghost-btn danger-text"
+              type="button"
+              :disabled="!selectedIds.length"
+              @click="removeSelected"
+            >
+              删除
+            </button>
           </div>
         </div>
       </div>
 
       <ResizableTable
         :key="isMobile ? 'clothes-mobile' : 'clothes-desktop'"
-        :class="{ 'clothes-item-mobile-table': isMobile }"
+        :class="{ 'clothes-item-mobile-table': isMobile, 'clothes-item-desktop-table': !isMobile }"
         :columns="tableColumns"
         :rows="items"
-        :row-clickable="isMobile"
+        row-clickable
         empty-text="暂无衣服明细"
         @row-click="openForm"
       >
+        <template #selectHeader>
+          <label class="clothes-select-cell">
+            <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" />
+          </label>
+        </template>
+        <template #select="{ row }">
+          <label class="clothes-select-cell">
+            <input type="checkbox" :checked="isSelected(row.id)" @change="toggleSelect(row.id)" />
+          </label>
+        </template>
         <template #image="{ row }">
           <div class="clothes-image-cell">
             <img
@@ -31,10 +49,6 @@
             />
             <span v-else class="clothes-no-image">无</span>
           </div>
-        </template>
-        <template #actions="{ row }">
-          <button class="ghost-btn mini" type="button" @click="openForm(row)">编辑</button>
-          <button class="ghost-btn mini danger-text" type="button" @click="removeItem(row)">删除</button>
         </template>
       </ResizableTable>
 
@@ -54,8 +68,8 @@
       </div>
     </section>
 
-    <div v-if="dialogVisible" class="clothes-modal-mask" @click.self="closeForm">
-      <form class="clothes-modal-form" @submit.prevent="submitForm">
+    <div v-if="dialogVisible" ref="clothesItemModal" class="clothes-modal-mask clothes-item-modal" @click.self="closeForm">
+      <form class="clothes-modal-form clothes-modal-sheet" @submit.prevent="submitForm">
         <div class="form-head">
           <div>
             <p class="eyebrow">Clothes Item</p>
@@ -68,14 +82,14 @@
           <div class="clothes-form-grid">
             <label>
               <span>衣服名称</span>
-              <input v-model.trim="form.clothesName" :disabled="Boolean(editingId)" required placeholder="例如：黑色羽绒服" />
+              <input v-model.trim="form.clothesName" required placeholder="例如：黑色羽绒服" />
             </label>
             <label>
               <span>衣服类型</span>
               <select v-model="form.typeCode" required>
                 <option value="">请选择</option>
                 <option v-for="type in types" :key="type.type_code" :value="type.type_code">
-                  {{ type.type_code }} - {{ type.type_name }}
+                  {{ type.type_name }}
                 </option>
               </select>
             </label>
@@ -84,7 +98,7 @@
               <select v-model="form.areaCode" required>
                 <option value="">请选择</option>
                 <option v-for="location in locations" :key="location.area_code" :value="location.area_code">
-                  {{ location.area_code }} - {{ location.area_name }}
+                  {{ location.area_name }}
                 </option>
               </select>
             </label>
@@ -97,14 +111,16 @@
                 </option>
               </select>
             </label>
-            <label>
-              <span>买入时间</span>
-              <input v-model="form.purchaseTime" :disabled="Boolean(editingId)" type="date" />
-            </label>
-            <label>
-              <span>过期时间</span>
-              <input v-model="form.expireTime" type="date" />
-            </label>
+            <div class="clothes-date-row">
+              <label>
+                <span>买入时间</span>
+                <input v-model="form.purchaseTime" :disabled="Boolean(editingId)" type="date" />
+              </label>
+              <label>
+                <span>过期时间</span>
+                <input v-model="form.expireTime" type="date" />
+              </label>
+            </div>
             <label class="wide">
               <span>衣服图片</span>
               <div class="clothes-upload">
@@ -171,6 +187,7 @@ export default {
       uploading: false,
       uploadError: '',
       form: emptyForm(),
+      selectedIds: [],
       isMobile: false,
       mobileBreakpoint: null,
       columns: [
@@ -184,23 +201,29 @@ export default {
         { key: 'image_url', label: '图片', width: 90, slot: 'image' },
         { key: 'owner_name', label: '拥有者', width: 120 },
         { key: 'remark', label: '备注', width: 180 },
-        { key: 'actions', label: '操作', width: 150, slot: 'actions' },
         { key: 'created_by', label: '创建人', width: 100 },
         { key: 'created_at', label: '创建时间', width: 160, formatter: formatDateTime },
         { key: 'updated_by', label: '更新人', width: 100 },
         { key: 'updated_at', label: '更新时间', width: 160, formatter: formatDateTime }
       ],
       mobileColumns: [
-        { key: 'clothes_name', label: '衣服名称', width: 72 },
-        { key: 'area_name', label: '区域名称', width: 68 },
-        { key: 'image_url', label: '图片', width: 52, slot: 'image' },
-        { key: 'owner_name', label: '拥有者', width: 96 }
+        { key: 'clothes_name', label: '衣服名称', width: 78 },
+        { key: 'area_name', label: '区域名称', width: 96 },
+        { key: 'image_url', label: '图片', width: 42, slot: 'image' },
+        { key: 'owner_name', label: '拥有者', width: 60 }
       ]
     }
   },
   computed: {
     tableColumns() {
-      return this.isMobile ? this.mobileColumns : this.columns
+      const selectColumn = { key: '_select', label: '', width: 44, slot: 'select', headerSlot: 'selectHeader' }
+      if (this.isMobile) {
+        return [selectColumn, ...this.mobileColumns]
+      }
+      return [selectColumn, ...this.columns]
+    },
+    isAllSelected() {
+      return this.items.length > 0 && this.items.every(item => this.selectedIds.includes(item.id))
     },
     totalPages() {
       return Math.max(1, Math.ceil(this.total / this.pageSize))
@@ -214,7 +237,8 @@ export default {
     if (this.mobileBreakpoint) {
       this.mobileBreakpoint.removeEventListener('change', this.syncMobileState)
     }
-    document.body.classList.remove('modal-open')
+    this.teardownMobileFormViewport()
+    document.body.classList.remove('modal-open', 'clothes-modal-open')
   },
   methods: {
     setupMobileListener() {
@@ -237,6 +261,7 @@ export default {
       this.total = Number(result.total || 0)
       this.page = Number(result.page || this.page)
       this.pageSize = Number(result.size || this.pageSize)
+      this.selectedIds = []
       if (this.page > this.totalPages) {
         this.page = this.totalPages
         if (this.total > 0) {
@@ -280,12 +305,124 @@ export default {
         : emptyForm()
       this.dialogVisible = true
       document.body.classList.add('modal-open')
+      this.$nextTick(() => {
+        this.mountClothesModalToBody()
+        this.setupMobileFormViewport()
+      })
     },
     closeForm() {
+      this.teardownMobileFormViewport()
       this.dialogVisible = false
       this.uploadError = ''
       this.uploading = false
       document.body.classList.remove('modal-open')
+    },
+    mountClothesModalToBody() {
+      const mask = this.$refs.clothesItemModal
+      if (!mask || mask.parentNode === document.body) {
+        return
+      }
+      document.body.appendChild(mask)
+    },
+    setupMobileFormViewport() {
+      if (!this.isMobile || typeof window === 'undefined') {
+        return
+      }
+      document.body.classList.add('clothes-modal-open')
+      this.updateMobileFormViewport()
+      this._onMobileFormViewportChange = () => this.updateMobileFormViewport()
+      window.addEventListener('resize', this._onMobileFormViewportChange)
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', this._onMobileFormViewportChange)
+        window.visualViewport.addEventListener('scroll', this._onMobileFormViewportChange)
+      }
+      this._onMobileFormFocusIn = event => {
+        const target = event.target
+        if (!target || !target.closest || !target.closest('.clothes-item-modal')) {
+          return
+        }
+        if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+          return
+        }
+        window.setTimeout(() => {
+          this.updateMobileFormViewport()
+          this.scrollFormFieldIntoView(target)
+        }, 360)
+      }
+      document.addEventListener('focusin', this._onMobileFormFocusIn)
+    },
+    teardownMobileFormViewport() {
+      if (typeof window === 'undefined') {
+        return
+      }
+      document.body.classList.remove('clothes-modal-open')
+      if (this._onMobileFormViewportChange) {
+        window.removeEventListener('resize', this._onMobileFormViewportChange)
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', this._onMobileFormViewportChange)
+          window.visualViewport.removeEventListener('scroll', this._onMobileFormViewportChange)
+        }
+      }
+      if (this._onMobileFormFocusIn) {
+        document.removeEventListener('focusin', this._onMobileFormFocusIn)
+      }
+      this._onMobileFormViewportChange = null
+      this._onMobileFormFocusIn = null
+      this.resetMobileFormViewportStyles()
+    },
+    resetMobileFormViewportStyles() {
+      const mask = this.$refs.clothesItemModal
+      if (!mask) {
+        return
+      }
+      ;['top', 'left', 'width', 'height', 'right', 'bottom', 'padding', 'boxSizing'].forEach(prop => {
+        mask.style[prop] = ''
+      })
+      mask.style.removeProperty('--clothes-modal-height')
+    },
+    updateMobileFormViewport() {
+      const mask = this.$refs.clothesItemModal
+      if (!mask || !this.isMobile) {
+        return
+      }
+      const viewport = window.visualViewport
+      const layoutTop = viewport ? viewport.offsetTop : 0
+      const layoutLeft = viewport ? viewport.offsetLeft : 0
+      const layoutWidth = viewport ? viewport.width : window.innerWidth
+      const layoutHeight = viewport ? viewport.height : window.innerHeight
+      const edgeGap = 8
+
+      mask.style.position = 'fixed'
+      mask.style.top = `${layoutTop}px`
+      mask.style.left = `${layoutLeft}px`
+      mask.style.width = `${layoutWidth}px`
+      mask.style.height = `${layoutHeight}px`
+      mask.style.right = 'auto'
+      mask.style.bottom = 'auto'
+      mask.style.padding = `${edgeGap}px`
+      mask.style.boxSizing = 'border-box'
+
+      const formHeight = Math.max(240, layoutHeight - edgeGap * 2)
+      mask.style.setProperty('--clothes-modal-height', `${formHeight}px`)
+    },
+    scrollFormFieldIntoView(field) {
+      const form = field.closest('.clothes-modal-sheet')
+      const body = form && form.querySelector('.clothes-modal-body')
+      if (!body) {
+        field.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+        return
+      }
+      const bodyRect = body.getBoundingClientRect()
+      const fieldRect = field.getBoundingClientRect()
+      const actions = form.querySelector('.clothes-form-actions')
+      const reservedBottom = actions ? actions.offsetHeight + 12 : 12
+      const visibleBottom = bodyRect.bottom - reservedBottom
+      if (fieldRect.bottom > visibleBottom) {
+        body.scrollTop += fieldRect.bottom - visibleBottom
+      }
+      if (fieldRect.top < bodyRect.top + 12) {
+        body.scrollTop -= bodyRect.top + 12 - fieldRect.top
+      }
     },
     triggerFileSelect() {
       this.$refs.fileInput.click()
@@ -324,6 +461,45 @@ export default {
         window.open(url, '_blank')
       }
     },
+    isSelected(id) {
+      return this.selectedIds.includes(id)
+    },
+    toggleSelect(id) {
+      const index = this.selectedIds.indexOf(id)
+      if (index >= 0) {
+        this.selectedIds.splice(index, 1)
+      } else {
+        this.selectedIds.push(id)
+      }
+    },
+    toggleSelectAll(event) {
+      if (event.target.checked) {
+        this.selectedIds = this.items.map(item => item.id)
+        return
+      }
+      this.selectedIds = []
+    },
+    async removeSelected() {
+      if (!this.selectedIds.length) {
+        return
+      }
+      const selectedItems = this.items.filter(item => this.selectedIds.includes(item.id))
+      const names = selectedItems.map(item => item.clothes_name).join('、')
+      const message = selectedItems.length === 1
+        ? `确认删除衣服「${names}」吗？`
+        : `确认删除选中的 ${selectedItems.length} 条衣服明细吗？`
+      if (!window.confirm(message)) {
+        return
+      }
+      for (const id of [...this.selectedIds]) {
+        await deleteClothesItem(id)
+      }
+      if (this.selectedIds.length >= this.items.length && this.page > 1) {
+        this.page -= 1
+      }
+      this.selectedIds = []
+      await this.loadItems()
+    },
     async submitForm() {
       if (this.uploading) {
         return
@@ -336,15 +512,6 @@ export default {
       }
       this.closeForm()
       await this.loadItems()
-    },
-    async removeItem(item) {
-      if (window.confirm(`确认删除衣服「${item.clothes_name}」吗？`)) {
-        await deleteClothesItem(item.id)
-        if (this.items.length === 1 && this.page > 1) {
-          this.page -= 1
-        }
-        await this.loadItems()
-      }
     }
   }
 }
@@ -435,26 +602,39 @@ function formatDateTime(value) {
 .clothes-modal-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
-  margin-top: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  margin-top: 16px;
 }
 
 .clothes-form-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  height: 100%;
   align-content: start;
 }
 
 .clothes-form-grid label {
   display: grid;
   gap: 8px;
+  align-self: start;
   color: var(--ink-muted);
   font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.clothes-date-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.clothes-date-row label {
+  min-width: 0;
 }
 
 .clothes-form-grid input,
@@ -480,9 +660,12 @@ function formatDateTime(value) {
 }
 
 .clothes-form-actions {
-  margin-top: 20px;
-  padding-top: 18px;
+  margin-top: 0;
+  padding-top: 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
   flex-shrink: 0;
+  background: var(--card-bg);
+  box-shadow: 0 -10px 28px rgba(28, 22, 16, 0.08);
 }
 
 .clothes-upload {
@@ -525,13 +708,32 @@ function formatDateTime(value) {
 
 @media (max-width: 640px) {
   .clothes-modal-form {
-    width: calc(100vw - 16px);
-    height: calc(100vh - 16px);
+    width: 100%;
+    height: var(--clothes-modal-height, calc(100dvh - 16px));
+    max-height: var(--clothes-modal-height, calc(100dvh - 16px));
     padding: 18px 16px;
   }
 
   .clothes-form-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .clothes-date-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .clothes-date-row input[type='date'] {
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 13px;
+  }
+
+  .clothes-form-actions .ghost-btn,
+  .clothes-form-actions .primary-btn {
+    min-height: 44px;
   }
 }
 </style>

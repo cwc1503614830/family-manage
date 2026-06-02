@@ -482,37 +482,65 @@ button:disabled {
 }
 
 .clothes-item-list-page .clothes-item-mobile-table col:nth-child(1) {
-  width: 23% !important;
+  width: 9% !important;
 }
 
 .clothes-item-list-page .clothes-item-mobile-table col:nth-child(2) {
-  width: 21% !important;
+  width: 27% !important;
 }
 
 .clothes-item-list-page .clothes-item-mobile-table col:nth-child(3) {
-  width: 17% !important;
+  width: 34% !important;
 }
 
 .clothes-item-list-page .clothes-item-mobile-table col:nth-child(4) {
-  width: 39% !important;
+  width: 13% !important;
 }
 
-.clothes-item-list-page .clothes-item-mobile-table th:nth-child(3) .th-label {
-  padding-right: 4px;
+.clothes-item-list-page .clothes-item-mobile-table col:nth-child(5) {
+  width: 17% !important;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th .th-label {
+  display: inline-block;
+  line-height: 1.35;
+  word-break: keep-all;
 }
 
 .clothes-item-list-page .clothes-item-mobile-table th:nth-child(1),
-.clothes-item-list-page .clothes-item-mobile-table th:nth-child(2),
-.clothes-item-list-page .clothes-item-mobile-table td:nth-child(1),
-.clothes-item-list-page .clothes-item-mobile-table td:nth-child(2) {
+.clothes-item-list-page .clothes-item-mobile-table td:nth-child(1) {
   padding-left: 8px;
   padding-right: 6px;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(2),
+.clothes-item-list-page .clothes-item-mobile-table td:nth-child(2) {
+  padding-left: 12px;
+  padding-right: 10px;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(3),
+.clothes-item-list-page .clothes-item-mobile-table td:nth-child(3) {
+  padding-left: 12px;
+  padding-right: 10px;
   font-size: 12px;
 }
 
 .clothes-item-list-page .clothes-item-mobile-table th:nth-child(4),
 .clothes-item-list-page .clothes-item-mobile-table td:nth-child(4) {
-  padding-right: 10px;
+  padding-left: 10px;
+  padding-right: 8px;
+  text-align: center;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(4) .th-label {
+  padding-right: 0;
+}
+
+.clothes-item-list-page .clothes-item-mobile-table th:nth-child(5),
+.clothes-item-list-page .clothes-item-mobile-table td:nth-child(5) {
+  padding-left: 10px;
+  padding-right: 8px;
 }
 
 .clothes-item-list-page .clothes-item-page-head {
@@ -540,6 +568,33 @@ button:disabled {
   align-items: center;
   gap: 12px;
   flex: 0 0 auto;
+}
+
+.clothes-item-list-page .clothes-item-actions .ghost-btn.danger-text:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.clothes-item-list-page .clothes-select-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.clothes-item-list-page .clothes-select-cell input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.clothes-item-list-page .clothes-item-desktop-table tr.row-clickable {
+  cursor: pointer;
+}
+
+.clothes-item-list-page .clothes-item-desktop-table tr.row-clickable:hover td {
+  background: rgba(37, 99, 235, 0.06);
 }
 
 .clothes-item-list-page .clothes-item-mobile-table th,
@@ -2191,8 +2246,33 @@ body.modal-open {
     overflow: hidden;
   }
 
-  body.wealth-modal-open .mobile-bottom-tabs {
+  body.wealth-modal-open .mobile-bottom-tabs,
+  body.clothes-modal-open .mobile-bottom-tabs {
     display: none !important;
+  }
+
+  body.clothes-modal-open {
+    overflow: hidden;
+  }
+
+  .clothes-item-modal {
+    z-index: 5000;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  .clothes-item-modal .clothes-modal-sheet {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    height: var(--clothes-modal-height, 100%);
+    max-height: var(--clothes-modal-height, 100%);
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 16px;
   }
 
   .modal-mask.wealth-asset-modal {
@@ -2409,27 +2489,28 @@ body.modal-open {
 
   .clothes-item-list-page .clothes-item-mobile-table th,
   .clothes-item-list-page .clothes-item-mobile-table td {
-    padding: 14px 8px;
+    padding-top: 14px;
+    padding-bottom: 14px;
     font-size: 13px;
   }
 
-  .clothes-item-list-page .clothes-item-mobile-table th:nth-child(1),
   .clothes-item-list-page .clothes-item-mobile-table th:nth-child(2),
-  .clothes-item-list-page .clothes-item-mobile-table td:nth-child(1),
   .clothes-item-list-page .clothes-item-mobile-table td:nth-child(2) {
-    padding-left: 8px;
-    padding-right: 4px;
+    font-size: 12.5px;
+  }
+
+  .clothes-item-list-page .clothes-item-mobile-table th:nth-child(3),
+  .clothes-item-list-page .clothes-item-mobile-table td:nth-child(3) {
     font-size: 12px;
+  }
+
+  .clothes-item-list-page .clothes-item-mobile-table th:nth-child(5) .th-label {
+    font-size: 12.5px;
   }
 
   .clothes-item-list-page .clothes-item-mobile-table .clothes-thumb {
     width: 36px;
     height: 36px;
-  }
-
-  .clothes-item-list-page .clothes-item-mobile-table th:nth-child(4),
-  .clothes-item-list-page .clothes-item-mobile-table td:nth-child(4) {
-    font-size: 13px;
   }
 
   .menu-toolbar {

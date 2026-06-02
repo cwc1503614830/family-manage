@@ -11,7 +11,8 @@
       <thead>
         <tr>
           <th v-for="column in columns" :key="column.key">
-            <span class="th-label">{{ column.label }}</span>
+            <slot v-if="column.headerSlot" :name="column.headerSlot"></slot>
+            <span v-else class="th-label">{{ column.label }}</span>
             <span
               class="column-resizer"
               title="拖拽调整列宽"
