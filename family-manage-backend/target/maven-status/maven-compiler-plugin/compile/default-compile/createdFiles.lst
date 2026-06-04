@@ -1,7 +1,9 @@
 com\example\familymanage\controller\FileUploadController.class
 com\example\familymanage\common\ApiResponse.class
 com\example\familymanage\dto\WealthAssetRequest.class
+com\example\familymanage\controller\GoodsManageController.class
 com\example\familymanage\dto\TravelDomesticRequest.class
+com\example\familymanage\dto\GoodsLocationRequest.class
 com\example\familymanage\controller\FamilyAssetController.class
 com\example\familymanage\dto\StockChangeRequest.class
 com\example\familymanage\dto\KitchenIngredientRequest.class
@@ -22,11 +24,13 @@ com\example\familymanage\service\FamilyAssetService.class
 com\example\familymanage\config\DatabaseInitializer.class
 com\example\familymanage\dto\KitchenDishRequest.class
 com\example\familymanage\service\impl\FamilyAssetServiceImpl.class
+com\example\familymanage\dto\GoodsItemRequest.class
 com\example\familymanage\FamilyManageApplication.class
 com\example\familymanage\common\GlobalExceptionHandler.class
 com\example\familymanage\dto\AlbumThemeRequest.class
 com\example\familymanage\dto\AssetSummary.class
 com\example\familymanage\controller\TravelManageController.class
+com\example\familymanage\service\GoodsManageService.class
 com\example\familymanage\service\KitchenManageService.class
 com\example\familymanage\entity\FamilyAsset.class
 com\example\familymanage\dto\AssetQuery.class

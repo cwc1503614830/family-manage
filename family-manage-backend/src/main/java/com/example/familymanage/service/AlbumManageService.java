@@ -249,8 +249,11 @@ public class AlbumManageService {
     }
 
     private void validatePhoto(AlbumPhotoRequest request) {
-        if (request == null || !StringUtils.hasText(request.getImageName())) {
-            throw new IllegalArgumentException("图片名称不能为空");
+        if (request == null) {
+            throw new IllegalArgumentException("请求不能为空");
+        }
+        if (!StringUtils.hasText(request.getImageName())) {
+            request.setImageName(defaultImageName(request.getImageUrl()));
         }
         if (!StringUtils.hasText(request.getImageUrl())) {
             throw new IllegalArgumentException("请上传图片");
@@ -263,5 +266,25 @@ public class AlbumManageService {
         if (themeCount == null || themeCount == 0) {
             throw new IllegalArgumentException("相册主题不存在");
         }
+    }
+
+    private String defaultImageName(String imageUrl) {
+        if (!StringUtils.hasText(imageUrl)) {
+            return "照片";
+        }
+        String path = imageUrl;
+        int queryIndex = path.indexOf('?');
+        if (queryIndex >= 0) {
+            path = path.substring(0, queryIndex);
+        }
+        int slashIndex = path.lastIndexOf('/');
+        if (slashIndex >= 0 && slashIndex < path.length() - 1) {
+            path = path.substring(slashIndex + 1);
+        }
+        int dotIndex = path.lastIndexOf('.');
+        if (dotIndex > 0) {
+            path = path.substring(0, dotIndex);
+        }
+        return StringUtils.hasText(path) ? path : "照片";
     }
 }

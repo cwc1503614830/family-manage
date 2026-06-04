@@ -98,6 +98,8 @@ import KitchenIngredientView from './views/KitchenIngredientView.vue'
 import KitchenCookRecordView from './views/KitchenCookRecordView.vue'
 import AlbumPhotoView from './views/AlbumPhotoView.vue'
 import AlbumThemeView from './views/AlbumThemeView.vue'
+import GoodsItemView from './views/GoodsItemView.vue'
+import GoodsLocationView from './views/GoodsLocationView.vue'
 
 const viewMap = {
   'asset:view': AssetView,
@@ -113,6 +115,8 @@ const viewMap = {
   'kitchen:cook': KitchenCookRecordView,
   'album:photo': AlbumPhotoView,
   'album:theme': AlbumThemeView,
+  'goods:item': GoodsItemView,
+  'goods:location': GoodsLocationView,
   'system:user': UserManageView,
   'system:role': RoleManageView,
   'system:menu': MenuManageView
@@ -135,6 +139,8 @@ export default {
     KitchenCookRecordView,
     AlbumPhotoView,
     AlbumThemeView,
+    GoodsItemView,
+    GoodsLocationView,
     UserManageView,
     RoleManageView,
     MenuManageView

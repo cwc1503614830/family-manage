@@ -2997,6 +2997,69 @@ body.modal-open {
   background: var(--bg-soft);
 }
 
+.album-create-card {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.album-create-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.album-create-card .album-theme-card-cover.create {
+  background: #eef1f4;
+  border: none;
+  border-radius: 10px;
+}
+
+.album-create-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.album-create-icon {
+  position: relative;
+  width: 48px;
+  height: 40px;
+  display: block;
+}
+
+.album-create-square {
+  position: absolute;
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 2px solid #b8c0c8;
+  background: rgba(255, 255, 255, 0.65);
+  box-sizing: border-box;
+}
+
+.album-create-square.back {
+  top: 0;
+  left: 2px;
+}
+
+.album-create-square.front {
+  bottom: 0;
+  right: 2px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.album-create-label {
+  font-size: 14px;
+  color: #9aa3ad;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
 .album-theme-card-cover {
   position: relative;
   aspect-ratio: 1;
@@ -3020,12 +3083,6 @@ body.modal-open {
 .album-no-cover {
   color: var(--muted);
   font-size: 13px;
-}
-
-.album-create-icon {
-  font-size: 36px;
-  color: var(--ink-muted);
-  line-height: 1;
 }
 
 .album-count-badge {
@@ -3269,16 +3326,6 @@ body.modal-open {
 .album-qq-card .album-theme-card-cover {
   border-radius: 10px;
   aspect-ratio: 1;
-}
-
-.album-qq-card.create-card .album-theme-card-cover.create {
-  background: #eef0f3;
-  border: 1px dashed #c8cdd4;
-}
-
-.album-qq-card .album-create-icon {
-  font-size: 28px;
-  color: #9aa3ad;
 }
 
 .album-qq-card .album-theme-card-body {

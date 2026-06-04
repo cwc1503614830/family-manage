@@ -92,12 +92,15 @@
         class="album-card-grid"
         :class="{ loading: loading, 'album-qq-grid': isMobile }"
       >
-        <article class="album-theme-card create-card album-qq-card" @click="openCreateTheme">
+        <article class="album-theme-card album-create-card" @click="openCreateTheme">
           <div class="album-theme-card-cover create">
-            <span class="album-create-icon">⊞</span>
-          </div>
-          <div class="album-theme-card-body">
-            <h3>新建相册</h3>
+            <div class="album-create-inner">
+              <span class="album-create-icon" aria-hidden="true">
+                <i class="album-create-square back"></i>
+                <i class="album-create-square front"></i>
+              </span>
+              <span class="album-create-label">新建相册</span>
+            </div>
           </div>
         </article>
 
@@ -196,10 +199,6 @@
               <option v-for="theme in allThemes" :key="theme.id" :value="theme.id">{{ theme.theme_name }}</option>
             </select>
           </label>
-          <label>
-            <span>图片名称</span>
-            <input v-model.trim="photoForm.imageName" required placeholder="照片名称" />
-          </label>
           <label class="wide">
             <span>照片</span>
             <div class="clothes-upload">
@@ -228,10 +227,6 @@
                 <span v-if="uploadError" class="form-error">{{ uploadError }}</span>
               </div>
             </div>
-          </label>
-          <label class="wide">
-            <span>备注</span>
-            <textarea v-model.trim="photoForm.remark" rows="2"></textarea>
           </label>
         </div>
         <div class="form-actions">
@@ -467,11 +462,8 @@ export default {
           this.pendingUploads.push({
             previewUrl,
             imageUrl: previewUrl,
-            imageName: baseName
+            imageName: baseName || `照片${this.pendingUploads.length + 1}`
           })
-          if (!this.photoForm.imageName) {
-            this.photoForm.imageName = baseName
-          }
         }
       } catch (error) {
         this.uploadError = error.message || '上传失败'
@@ -505,27 +497,25 @@ export default {
       }
       if (this.editingPhotoId) {
         await updateAlbumPhoto(this.editingPhotoId, {
-          imageName: this.photoForm.imageName,
+          imageName: this.photoForm.imageName || resolveAutoImageName(this.photoForm.imageUrl, 0),
           imageUrl: this.photoForm.imageUrl,
           themeId,
-          remark: this.photoForm.remark
+          remark: this.photoForm.remark || ''
         })
       } else if (this.pendingUploads.length) {
         const batch = this.pendingUploads.map((item, index) => ({
-          imageName: this.pendingUploads.length === 1
-            ? this.photoForm.imageName
-            : (item.imageName || `${this.photoForm.imageName || '照片'}${index + 1}`),
+          imageName: resolveAutoImageName(item.imageName || item.imageUrl, index),
           imageUrl: item.imageUrl,
           themeId,
-          remark: this.photoForm.remark
+          remark: ''
         }))
         await createAlbumPhotosBatch(batch)
       } else if (this.photoForm.imageUrl) {
         await createAlbumPhoto({
-          imageName: this.photoForm.imageName,
+          imageName: resolveAutoImageName(this.photoForm.imageUrl, 0),
           imageUrl: this.photoForm.imageUrl,
           themeId,
-          remark: this.photoForm.remark
+          remark: ''
         })
       } else {
         this.uploadError = '请上传至少一张照片'
@@ -559,5 +549,18 @@ function emptyThemeForm() {
 
 function emptyPhotoForm() {
   return { imageName: '', imageUrl: '', themeId: null, remark: '' }
+}
+
+function resolveAutoImageName(source, index) {
+  const text = String(source || '').trim()
+  if (text && !text.startsWith('http') && !text.includes('/')) {
+    return text
+  }
+  const fileName = text.split('/').pop() || ''
+  const baseName = fileName.replace(/\.[^.]+$/, '').replace(/\?.*$/, '')
+  if (baseName) {
+    return baseName
+  }
+  return `照片${index + 1}`
 }
 </script>
