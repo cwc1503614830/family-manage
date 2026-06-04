@@ -48,6 +48,7 @@ public class DatabaseInitializer implements ApplicationRunner {
         ensureWealthTypeSortNum();
         initTravelTables();
         initKitchenTables();
+        initAlbumTables();
         seedAuthData();
     }
 
@@ -358,6 +359,29 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='食材清单'");
     }
 
+    private void initAlbumTables() {
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS album_theme ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "theme_name VARCHAR(120) NOT NULL COMMENT '主题',"
+                + "remark VARCHAR(500) DEFAULT NULL COMMENT '备注',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id),"
+                + "UNIQUE KEY uk_theme_name (theme_name)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='相册主题'");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS album_photo ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "image_name VARCHAR(120) NOT NULL COMMENT '图片名称',"
+                + "image_url VARCHAR(500) NOT NULL DEFAULT '' COMMENT '图片地址',"
+                + "theme_id BIGINT NOT NULL COMMENT '主题ID',"
+                + "remark VARCHAR(500) DEFAULT NULL COMMENT '备注',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id),"
+                + "KEY idx_theme_id (theme_id)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='相册图片'");
+    }
+
     private void seedAuthData() {
         jdbcTemplate.update("INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES "
                 + "('全部资产', 'asset:view', '▦', '/assets', 'AssetConsole', '', 10, 1),"
@@ -375,6 +399,9 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "('菜品清单', 'kitchen:dish', '☰', '/kitchen/dishes', 'KitchenDish', '', 26, 1),"
                 + "('食材清单', 'kitchen:ingredient', '◈', '/kitchen/ingredients', 'KitchenIngredient', '', 27, 1),"
                 + "('制作记录', 'kitchen:cook', '⌖', '/kitchen/cook-records', 'KitchenCookRecord', '', 28, 1),"
+                + "('相册管理', 'album:manage', '📷', '/album', 'AlbumLayout', '', 35, 1),"
+                + "('相册', 'album:photo', '☰', '/album/photos', 'AlbumPhoto', '', 36, 1),"
+                + "('相册主题', 'album:theme', '◈', '/album/themes', 'AlbumTheme', '', 37, 1),"
                 + "('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),"
                 + "('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),"
                 + "('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),"
@@ -402,6 +429,10 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (kitchenMenuId != null) {
             jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('kitchen:dish', 'kitchen:ingredient', 'kitchen:cook')", kitchenMenuId);
         }
+        Long albumMenuId = getMenuId("album:manage");
+        if (albumMenuId != null) {
+            jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('album:photo', 'album:theme')", albumMenuId);
+        }
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/assets', component = 'AssetConsole', sort_no = 10, visible = 1 WHERE code = 'asset:view'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/clothes', component = 'ClothesLayout', sort_no = 20, visible = 1 WHERE code = 'clothes:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/items', component = 'ClothesItem', sort_no = 21, visible = 1 WHERE code = 'clothes:item'");
@@ -417,6 +448,9 @@ public class DatabaseInitializer implements ApplicationRunner {
         jdbcTemplate.update("UPDATE sys_menu SET path = '/kitchen/dishes', component = 'KitchenDish', sort_no = 26, visible = 1 WHERE code = 'kitchen:dish'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/kitchen/ingredients', component = 'KitchenIngredient', sort_no = 27, visible = 1 WHERE code = 'kitchen:ingredient'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/kitchen/cook-records', component = 'KitchenCookRecord', sort_no = 28, visible = 1 WHERE code = 'kitchen:cook'");
+        jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/album', component = 'AlbumLayout', sort_no = 35, visible = 1 WHERE code = 'album:manage'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/album/photos', component = 'AlbumPhoto', sort_no = 36, visible = 1 WHERE code = 'album:photo'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/album/themes', component = 'AlbumTheme', sort_no = 37, visible = 1 WHERE code = 'album:theme'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/system', component = 'SystemLayout', sort_no = 80, visible = 1 WHERE code = 'system:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/users', component = 'SystemUser', sort_no = 81, visible = 1 WHERE code = 'system:user'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/roles', component = 'SystemRole', sort_no = 82, visible = 1 WHERE code = 'system:role'");
@@ -447,6 +481,12 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "WHERE r.code = 'admin' AND m.code IN ('kitchen:manage', 'kitchen:dish', 'kitchen:ingredient', 'kitchen:cook')");
         jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
                 + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('kitchen:manage', 'kitchen:dish', 'kitchen:ingredient', 'kitchen:cook') "
+                + "WHERE r.code = 'member'");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r CROSS JOIN sys_menu m "
+                + "WHERE r.code = 'admin' AND m.code IN ('album:manage', 'album:photo', 'album:theme')");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('album:manage', 'album:photo', 'album:theme') "
                 + "WHERE r.code = 'member'");
         Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys_user", Integer.class);
         if (userCount != null && userCount == 0) {

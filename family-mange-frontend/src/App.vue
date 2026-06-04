@@ -96,6 +96,8 @@ import TravelDomesticView from './views/TravelDomesticView.vue'
 import KitchenDishView from './views/KitchenDishView.vue'
 import KitchenIngredientView from './views/KitchenIngredientView.vue'
 import KitchenCookRecordView from './views/KitchenCookRecordView.vue'
+import AlbumPhotoView from './views/AlbumPhotoView.vue'
+import AlbumThemeView from './views/AlbumThemeView.vue'
 
 const viewMap = {
   'asset:view': AssetView,
@@ -109,6 +111,8 @@ const viewMap = {
   'kitchen:dish': KitchenDishView,
   'kitchen:ingredient': KitchenIngredientView,
   'kitchen:cook': KitchenCookRecordView,
+  'album:photo': AlbumPhotoView,
+  'album:theme': AlbumThemeView,
   'system:user': UserManageView,
   'system:role': RoleManageView,
   'system:menu': MenuManageView
@@ -129,6 +133,8 @@ export default {
     KitchenDishView,
     KitchenIngredientView,
     KitchenCookRecordView,
+    AlbumPhotoView,
+    AlbumThemeView,
     UserManageView,
     RoleManageView,
     MenuManageView
@@ -296,6 +302,7 @@ function normalizeSystemMenus(items) {
 
 const MOBILE_TAB_WHITELIST = [
   { code: 'asset:view', name: '全部资产', icon: '▦' },
+  { code: 'album:photo', name: '相册', icon: '📷' },
   { code: 'clothes:item', name: '衣服明细', icon: '⌥' },
   { code: 'kitchen:dish', name: '菜品清单', icon: '🍳' },
   { code: 'kitchen:ingredient', name: '食材清单', icon: '🥬' },
