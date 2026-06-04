@@ -93,6 +93,9 @@ import WealthOverviewView from './views/WealthOverviewView.vue'
 import WealthTypeView from './views/WealthTypeView.vue'
 import TravelWuhanView from './views/TravelWuhanView.vue'
 import TravelDomesticView from './views/TravelDomesticView.vue'
+import KitchenDishView from './views/KitchenDishView.vue'
+import KitchenIngredientView from './views/KitchenIngredientView.vue'
+import KitchenCookRecordView from './views/KitchenCookRecordView.vue'
 
 const viewMap = {
   'asset:view': AssetView,
@@ -103,6 +106,9 @@ const viewMap = {
   'wealth:type': WealthTypeView,
   'travel:wuhan': TravelWuhanView,
   'travel:domestic': TravelDomesticView,
+  'kitchen:dish': KitchenDishView,
+  'kitchen:ingredient': KitchenIngredientView,
+  'kitchen:cook': KitchenCookRecordView,
   'system:user': UserManageView,
   'system:role': RoleManageView,
   'system:menu': MenuManageView
@@ -120,6 +126,9 @@ export default {
     WealthTypeView,
     TravelWuhanView,
     TravelDomesticView,
+    KitchenDishView,
+    KitchenIngredientView,
+    KitchenCookRecordView,
     UserManageView,
     RoleManageView,
     MenuManageView
@@ -288,6 +297,7 @@ function normalizeSystemMenus(items) {
 const MOBILE_TAB_WHITELIST = [
   { code: 'asset:view', name: '全部资产', icon: '▦' },
   { code: 'clothes:item', name: '衣服明细', icon: '⌥' },
+  { code: 'kitchen:dish', name: '菜品清单', icon: '🍳' },
   { code: 'wealth:overview', name: '资产总览', icon: '⌂' },
   { code: 'travel:wuhan', name: '武汉游', icon: '⚑' }
 ]
