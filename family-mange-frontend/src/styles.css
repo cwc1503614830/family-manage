@@ -425,6 +425,96 @@ button:disabled {
   display: none;
 }
 
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table {
+  overflow: hidden;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table table {
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table col:nth-child(1) {
+  width: 9% !important;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table col:nth-child(2) {
+  width: 24% !important;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table col:nth-child(3) {
+  width: 24% !important;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table col:nth-child(4) {
+  width: 20% !important;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table col:nth-child(5) {
+  width: 23% !important;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table th .th-label {
+  display: inline-block;
+  overflow: visible;
+  padding-right: 0;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.35;
+  font-size: 11px;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table th,
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table td {
+  padding: 14px 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: middle;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table th:nth-child(1),
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table td:nth-child(1) {
+  padding-left: 8px;
+  padding-right: 4px;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-select-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-select-cell input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-toolbar .ghost-btn.danger-text:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table .truncate {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table tbody tr {
+  min-height: 48px;
+}
+
+.kitchen-ingredient-page .kitchen-ingredient-mobile-table .column-resizer {
+  display: none;
+}
+
 .travel-wuhan-page .travel-wuhan-mobile-table {
   overflow: hidden;
 }
@@ -1353,6 +1443,32 @@ button:disabled {
   animation: scaleIn 0.35s var(--ease-spring) both;
 }
 
+.modal-mask.kitchen-ingredient-modal {
+  z-index: 5000;
+}
+
+.modal-mask.kitchen-ingredient-modal .asset-form-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+.modal-mask.kitchen-ingredient-modal .asset-form-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.modal-mask.kitchen-ingredient-modal .form-head,
+.modal-mask.kitchen-ingredient-modal .form-actions {
+  flex-shrink: 0;
+}
+
+body.kitchen-ingredient-modal-open {
+  overflow: hidden;
+}
+
 .form-head {
   display: flex;
   align-items: flex-start;
@@ -1886,8 +2002,9 @@ body.modal-open {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-width: 72px;
-  padding: 8px 12px;
+  min-width: 68px;
+  max-width: 88px;
+  padding: 8px 10px;
   scroll-snap-align: start;
   border: 0;
   background: transparent;
@@ -2248,8 +2365,52 @@ body.modal-open {
 
   body.wealth-modal-open .mobile-bottom-tabs,
   body.clothes-modal-open .mobile-bottom-tabs,
-  body.kitchen-modal-open .mobile-bottom-tabs {
+  body.kitchen-modal-open .mobile-bottom-tabs,
+  body.kitchen-ingredient-modal-open .mobile-bottom-tabs {
     display: none !important;
+  }
+
+  .modal-mask.kitchen-ingredient-modal {
+    z-index: 5000;
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  .modal-mask.kitchen-ingredient-modal .asset-form-sheet {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .modal-mask.kitchen-ingredient-modal .asset-form-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-mask.kitchen-ingredient-modal .form-head,
+  .modal-mask.kitchen-ingredient-modal .form-actions {
+    flex-shrink: 0;
+  }
+
+  .modal-mask.kitchen-ingredient-modal .form-actions {
+    margin-top: 0;
+    padding-top: 14px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    background: var(--card-bg);
+    border-top: 1px solid var(--line);
+  }
+
+  .modal-mask.kitchen-ingredient-modal .form-actions .primary-btn,
+  .modal-mask.kitchen-ingredient-modal .form-actions .ghost-btn {
+    min-height: 44px;
   }
 
   body.clothes-modal-open {
@@ -2607,6 +2768,12 @@ body.modal-open {
   .filters select {
     flex: 1 1 100%;
   }
+}
+
+/* 隐藏各页面上传用的原生 file 控件，仅保留「选择图片」按钮 */
+.clothes-file-input,
+.kitchen-ingredient-file-input {
+  display: none !important;
 }
 
 /* 厨房管理 */

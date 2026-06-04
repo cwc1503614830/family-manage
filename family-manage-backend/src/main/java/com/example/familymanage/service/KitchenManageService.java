@@ -99,7 +99,7 @@ public class KitchenManageService {
         }
         List<Map<String, Object>> records = jdbcTemplate.queryForList(
                 "SELECT id, ingredient_name, production_date, shelf_life_months, expire_date, image_url, remark, created_at, updated_at "
-                        + "FROM kitchen_ingredient ORDER BY expire_date IS NULL, expire_date ASC, updated_at DESC, id DESC LIMIT ? OFFSET ?",
+                        + "FROM kitchen_ingredient ORDER BY expire_date IS NULL, expire_date ASC, id ASC LIMIT ? OFFSET ?",
                 safeSize, offset);
         records.forEach(this::normalizeIngredientImageUrl);
         Map<String, Object> result = new HashMap<String, Object>();
@@ -133,7 +133,11 @@ public class KitchenManageService {
             statement.setString(6, request.getRemark());
             return statement;
         }, keyHolder);
-        return getIngredient(keyHolder.getKey().longValue());
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("保存食材失败，请重试");
+        }
+        return getIngredient(key.longValue());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -341,6 +345,9 @@ public class KitchenManageService {
     private void validateIngredient(KitchenIngredientRequest request) {
         if (request == null || !StringUtils.hasText(request.getIngredientName())) {
             throw new IllegalArgumentException("请输入食材名称");
+        }
+        if (request.getShelfLifeMonths() != null && request.getShelfLifeMonths() < 0) {
+            throw new IllegalArgumentException("保质期不能为负数");
         }
     }
 
