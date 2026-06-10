@@ -100,6 +100,7 @@ import AlbumPhotoView from './views/AlbumPhotoView.vue'
 import AlbumThemeView from './views/AlbumThemeView.vue'
 import GoodsItemView from './views/GoodsItemView.vue'
 import GoodsLocationView from './views/GoodsLocationView.vue'
+import TodoItemView from './views/TodoItemView.vue'
 
 const viewMap = {
   'asset:view': AssetView,
@@ -117,6 +118,7 @@ const viewMap = {
   'album:theme': AlbumThemeView,
   'goods:item': GoodsItemView,
   'goods:location': GoodsLocationView,
+  'todo:item': TodoItemView,
   'system:user': UserManageView,
   'system:role': RoleManageView,
   'system:menu': MenuManageView
@@ -141,6 +143,7 @@ export default {
     AlbumThemeView,
     GoodsItemView,
     GoodsLocationView,
+    TodoItemView,
     UserManageView,
     RoleManageView,
     MenuManageView
@@ -223,12 +226,7 @@ export default {
       this.currentUser = session.user
       this.permissions = session.permissions || []
       this.visibleMenus = normalizeSystemMenus(session.menus || [])
-      this.menuGroups = this.visibleMenus.reduce((groups, menu) => {
-        if (menu.children && menu.children.length) {
-          groups[menu.code] = true
-        }
-        return groups
-      }, {})
+      this.menuGroups = {}
       const firstMenu = firstLeafMenu(this.visibleMenus)
       this.activeView = this.permissions.includes('asset:view') ? 'asset:view' : (firstMenu ? firstMenu.code : '')
       this.loadSummary()
@@ -312,6 +310,7 @@ const MOBILE_TAB_WHITELIST = [
   { code: 'clothes:item', name: '衣服明细', icon: '⌥' },
   { code: 'kitchen:dish', name: '菜品清单', icon: '🍳' },
   { code: 'kitchen:ingredient', name: '食材清单', icon: '🥬' },
+  { code: 'todo:item', name: '代办清单', icon: '✓' },
   { code: 'wealth:overview', name: '资产总览', icon: '⌂' },
   { code: 'travel:wuhan', name: '武汉游', icon: '⚑' }
 ]
