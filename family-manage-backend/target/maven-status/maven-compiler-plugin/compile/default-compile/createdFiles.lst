@@ -1,4 +1,5 @@
 com\example\familymanage\controller\FileUploadController.class
+com\example\familymanage\service\DashboardService.class
 com\example\familymanage\common\ApiResponse.class
 com\example\familymanage\dto\WealthAssetRequest.class
 com\example\familymanage\controller\GoodsManageController.class

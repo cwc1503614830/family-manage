@@ -46,7 +46,7 @@
       </nav>
 
       <div class="side-note">
-        <b>{{ summary.lowStockAssets || 0 }}</b>
+        <b>{{ summary.pendingTodoCount || 0 }}</b>
         <span>{{ currentUser.displayName || currentUser.username }}，欢迎回来</span>
         <button class="side-logout" type="button" @click="logoutUser">退出登录</button>
       </div>

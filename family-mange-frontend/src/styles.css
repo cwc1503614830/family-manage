@@ -515,6 +515,72 @@ button:disabled {
   display: none;
 }
 
+.todo-item-page .todo-item-mobile-table {
+  overflow: hidden;
+}
+
+.todo-item-page .todo-item-mobile-table table {
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.todo-item-page .todo-item-mobile-table col:nth-child(1) {
+  width: 42% !important;
+}
+
+.todo-item-page .todo-item-mobile-table col:nth-child(2) {
+  width: 30% !important;
+}
+
+.todo-item-page .todo-item-mobile-table col:nth-child(3) {
+  width: 28% !important;
+}
+
+.todo-item-page .todo-item-mobile-table th .th-label {
+  display: inline-block;
+  overflow: visible;
+  padding-right: 0;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+.todo-item-page .todo-item-mobile-table th,
+.todo-item-page .todo-item-mobile-table td {
+  padding: 18px 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: middle;
+}
+
+.todo-item-page .todo-item-mobile-table th {
+  font-size: 13px;
+}
+
+.todo-item-page .todo-item-mobile-table .truncate {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.todo-item-page .todo-item-mobile-table tbody tr {
+  min-height: 56px;
+}
+
+.todo-item-page .todo-item-mobile-table .column-resizer {
+  display: none;
+}
+
+.todo-item-page .todo-item-mobile-table .travel-check {
+  font-size: 14px;
+}
+
 .travel-wuhan-page .travel-wuhan-mobile-table {
   overflow: hidden;
 }
@@ -1053,6 +1119,39 @@ button:disabled {
 
 .stat-card.calm::after { background: var(--ocean); }
 .stat-card.calm strong { color: var(--ocean); }
+
+.dashboard-page {
+  min-height: calc(100vh - 120px);
+}
+
+.dashboard-stats-grid {
+  margin-top: 48px;
+}
+
+.dashboard-stat-card {
+  min-height: 148px;
+  padding: 28px 30px;
+}
+
+.dashboard-stat-card strong {
+  font-size: 42px;
+}
+
+.dashboard-stat-card span {
+  margin-top: 12px;
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-stat-card strong {
+    font-size: 28px;
+  }
+
+  .dashboard-stat-card {
+    min-height: 112px;
+    padding: 20px 22px;
+  }
+}
 
 /* ───── Toolbar ───── */
 .toolbar {

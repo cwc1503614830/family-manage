@@ -134,9 +134,9 @@ export default {
         { key: 'actions', label: '操作', width: 180, slot: 'actions' }
       ],
       mobileColumns: [
-        { key: 'item_title', label: '事项', width: 120 },
-        { key: 'due_date', label: '截止日期', width: 96, slot: 'due_date' },
-        { key: 'is_done', label: '是否完成', width: 88, slot: 'is_done' }
+        { key: 'item_title', label: '事项', width: 140 },
+        { key: 'due_date', label: '截止日期', width: 110, slot: 'due_date' },
+        { key: 'is_done', label: '是否完成', width: 100, slot: 'is_done' }
       ]
     }
   },
