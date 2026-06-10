@@ -498,10 +498,6 @@ export default {
         this.uploadError = '请选择图片文件'
         return
       }
-      if (file.size > 10 * 1024 * 1024) {
-        this.uploadError = '图片大小不能超过 10MB'
-        return
-      }
       this.uploadError = ''
       this.uploading = true
       try {

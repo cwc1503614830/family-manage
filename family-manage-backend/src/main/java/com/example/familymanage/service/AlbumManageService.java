@@ -11,12 +11,22 @@ import org.springframework.util.StringUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class AlbumManageService {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String PHOTO_ORDER_BY = " ORDER BY COALESCE(p.taken_at, p.created_at) DESC, p.id DESC";
+    private static final String PHOTO_SELECT = "SELECT p.id, p.image_name, p.image_url, p.theme_id, t.theme_name, p.remark, "
+            + "p.taken_at, p.created_at, p.updated_at FROM album_photo p "
+            + "LEFT JOIN album_theme t ON t.id = p.theme_id";
 
     private final JdbcTemplate jdbcTemplate;
     private final MinioService minioService;
@@ -38,7 +48,7 @@ public class AlbumManageService {
                 "SELECT t.id, t.theme_name, t.remark, t.created_at, t.updated_at, "
                         + "(SELECT COUNT(*) FROM album_photo p WHERE p.theme_id = t.id) AS photo_count, "
                         + "(SELECT p.image_url FROM album_photo p WHERE p.theme_id = t.id "
-                        + "ORDER BY p.updated_at DESC, p.id DESC LIMIT 1) AS cover_url "
+                        + "ORDER BY COALESCE(p.taken_at, p.created_at) DESC, p.id DESC LIMIT 1) AS cover_url "
                         + "FROM album_theme t ORDER BY t.updated_at DESC, t.id DESC");
         cards.forEach(this::normalizeCardCover);
         Long albumCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM album_theme", Long.class);
@@ -85,12 +95,10 @@ public class AlbumManageService {
         int safeSize = Math.min(Math.max(size, 1), 100);
         int offset = (safePage - 1) * safeSize;
         String countSql = "SELECT COUNT(*) FROM album_photo";
-        String listSql = "SELECT p.id, p.image_name, p.image_url, p.theme_id, t.theme_name, p.remark, "
-                + "p.created_at, p.updated_at FROM album_photo p "
-                + "LEFT JOIN album_theme t ON t.id = p.theme_id";
+        String listSql = PHOTO_SELECT;
         if (themeId != null) {
             countSql += " WHERE theme_id = ?";
-            listSql += " WHERE p.theme_id = ? ORDER BY p.updated_at DESC, p.id DESC LIMIT ? OFFSET ?";
+            listSql += " WHERE p.theme_id = ?" + PHOTO_ORDER_BY + " LIMIT ? OFFSET ?";
             Long total = jdbcTemplate.queryForObject(countSql, Long.class, themeId);
             if (total == null) {
                 total = 0L;
@@ -103,7 +111,7 @@ public class AlbumManageService {
         if (total == null) {
             total = 0L;
         }
-        listSql += " ORDER BY p.updated_at DESC, p.id DESC LIMIT ? OFFSET ?";
+        listSql += PHOTO_ORDER_BY + " LIMIT ? OFFSET ?";
         List<Map<String, Object>> records = jdbcTemplate.queryForList(listSql, safeSize, offset);
         records.forEach(this::normalizePhotoImageUrl);
         return buildPageResult(records, total, safePage, safeSize);
@@ -115,12 +123,18 @@ public class AlbumManageService {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO album_photo (image_name, image_url, theme_id, remark) VALUES (?, ?, ?, ?)",
+                    "INSERT INTO album_photo (image_name, image_url, theme_id, remark, taken_at) VALUES (?, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, request.getImageName().trim());
             statement.setString(2, normalizeStoredImageUrl(request.getImageUrl()));
             statement.setLong(3, request.getThemeId());
             statement.setString(4, request.getRemark());
+            Timestamp takenAt = toTimestamp(request.getTakenAt());
+            if (takenAt == null) {
+                statement.setNull(5, java.sql.Types.TIMESTAMP);
+            } else {
+                statement.setTimestamp(5, takenAt);
+            }
             return statement;
         }, keyHolder);
         touchThemeUpdatedAt(request.getThemeId());
@@ -189,9 +203,7 @@ public class AlbumManageService {
 
     private Map<String, Object> getPhoto(Long id) {
         Map<String, Object> photo = jdbcTemplate.queryForMap(
-                "SELECT p.id, p.image_name, p.image_url, p.theme_id, t.theme_name, p.remark, "
-                        + "p.created_at, p.updated_at FROM album_photo p "
-                        + "LEFT JOIN album_theme t ON t.id = p.theme_id WHERE p.id = ?", id);
+                PHOTO_SELECT + " WHERE p.id = ?", id);
         normalizePhotoImageUrl(photo);
         return photo;
     }
@@ -205,7 +217,7 @@ public class AlbumManageService {
                 "SELECT COUNT(*) FROM album_photo WHERE theme_id = ?", Long.class, themeId);
         theme.put("photo_count", photoCount == null ? 0L : photoCount);
         List<Map<String, Object>> covers = jdbcTemplate.queryForList(
-                "SELECT image_url FROM album_photo WHERE theme_id = ? ORDER BY updated_at DESC, id DESC LIMIT 1",
+                "SELECT image_url FROM album_photo WHERE theme_id = ? ORDER BY COALESCE(taken_at, created_at) DESC, id DESC LIMIT 1",
                 themeId);
         if (covers.isEmpty()) {
             theme.put("cover_url", "");
@@ -286,5 +298,23 @@ public class AlbumManageService {
             path = path.substring(0, dotIndex);
         }
         return StringUtils.hasText(path) ? path : "照片";
+    }
+
+    private Timestamp toTimestamp(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        String text = value.trim().replace('T', ' ');
+        if (text.length() == 10) {
+            text += " 00:00:00";
+        }
+        if (text.length() == 16) {
+            text += ":00";
+        }
+        try {
+            return Timestamp.valueOf(LocalDateTime.parse(text, DATE_TIME_FORMATTER));
+        } catch (DateTimeParseException ex) {
+            return null;
+        }
     }
 }

@@ -417,6 +417,8 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "PRIMARY KEY (id),"
                 + "KEY idx_theme_id (theme_id)"
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='相册图片'");
+        addColumnIfMissing("album_photo", "taken_at",
+                "ALTER TABLE album_photo ADD COLUMN taken_at DATETIME DEFAULT NULL COMMENT '拍摄时间' AFTER remark");
     }
 
     private void seedAuthData() {
