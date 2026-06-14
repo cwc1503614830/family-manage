@@ -50,6 +50,7 @@ public class DatabaseInitializer implements ApplicationRunner {
         initKitchenTables();
         initAlbumTables();
         initGoodsTables();
+        initTodoTables();
         seedAuthData();
     }
 
@@ -417,6 +418,23 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "PRIMARY KEY (id),"
                 + "KEY idx_theme_id (theme_id)"
                 + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='相册图片'");
+        addColumnIfMissing("album_photo", "taken_at",
+                "ALTER TABLE album_photo ADD COLUMN taken_at DATETIME DEFAULT NULL COMMENT '拍摄时间' AFTER remark");
+    }
+
+    private void initTodoTables() {
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS todo_item ("
+                + "id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',"
+                + "item_title VARCHAR(200) NOT NULL COMMENT '事项',"
+                + "due_date DATE DEFAULT NULL COMMENT '截止日期',"
+                + "is_done TINYINT NOT NULL DEFAULT 0 COMMENT '是否完成：1是，0否',"
+                + "remark VARCHAR(500) DEFAULT NULL COMMENT '备注',"
+                + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+                + "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',"
+                + "PRIMARY KEY (id),"
+                + "KEY idx_due_date (due_date),"
+                + "KEY idx_is_done (is_done)"
+                + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代办清单'");
     }
 
     private void seedAuthData() {
@@ -442,6 +460,8 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "('物品管理', 'goods:manage', '📦', '/goods', 'GoodsLayout', '', 38, 1),"
                 + "('物品明细', 'goods:item', '☰', '/goods/items', 'GoodsItem', '', 39, 1),"
                 + "('存放位置', 'goods:location', '⌖', '/goods/locations', 'GoodsLocation', '', 40, 1),"
+                + "('代办管理', 'todo:manage', '✓', '/todo', 'TodoLayout', '', 43, 1),"
+                + "('代办清单', 'todo:item', '☰', '/todo/items', 'TodoItem', '', 44, 1),"
                 + "('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),"
                 + "('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),"
                 + "('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),"
@@ -477,6 +497,10 @@ public class DatabaseInitializer implements ApplicationRunner {
         if (goodsMenuId != null) {
             jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code IN ('goods:item', 'goods:location')", goodsMenuId);
         }
+        Long todoMenuId = getMenuId("todo:manage");
+        if (todoMenuId != null) {
+            jdbcTemplate.update("UPDATE sys_menu SET parent_id = ?, visible = 1 WHERE code = 'todo:item'", todoMenuId);
+        }
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/assets', component = 'AssetConsole', sort_no = 10, visible = 1 WHERE code = 'asset:view'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/clothes', component = 'ClothesLayout', sort_no = 20, visible = 1 WHERE code = 'clothes:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/clothes/items', component = 'ClothesItem', sort_no = 21, visible = 1 WHERE code = 'clothes:item'");
@@ -498,6 +522,8 @@ public class DatabaseInitializer implements ApplicationRunner {
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/goods', component = 'GoodsLayout', sort_no = 38, visible = 1 WHERE code = 'goods:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/goods/items', component = 'GoodsItem', sort_no = 39, visible = 1 WHERE code = 'goods:item'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/goods/locations', component = 'GoodsLocation', sort_no = 40, visible = 1 WHERE code = 'goods:location'");
+        jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/todo', component = 'TodoLayout', sort_no = 43, visible = 1 WHERE code = 'todo:manage'");
+        jdbcTemplate.update("UPDATE sys_menu SET path = '/todo/items', component = 'TodoItem', sort_no = 44, visible = 1 WHERE code = 'todo:item'");
         jdbcTemplate.update("UPDATE sys_menu SET parent_id = NULL, path = '/system', component = 'SystemLayout', sort_no = 80, visible = 1 WHERE code = 'system:manage'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/users', component = 'SystemUser', sort_no = 81, visible = 1 WHERE code = 'system:user'");
         jdbcTemplate.update("UPDATE sys_menu SET path = '/system/roles', component = 'SystemRole', sort_no = 82, visible = 1 WHERE code = 'system:role'");
@@ -540,6 +566,12 @@ public class DatabaseInitializer implements ApplicationRunner {
                 + "WHERE r.code = 'admin' AND m.code IN ('goods:manage', 'goods:item', 'goods:location')");
         jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
                 + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('goods:manage', 'goods:item', 'goods:location') "
+                + "WHERE r.code = 'member'");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r CROSS JOIN sys_menu m "
+                + "WHERE r.code = 'admin' AND m.code IN ('todo:manage', 'todo:item')");
+        jdbcTemplate.update("INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('todo:manage', 'todo:item') "
                 + "WHERE r.code = 'member'");
         Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM sys_user", Integer.class);
         if (userCount != null && userCount == 0) {

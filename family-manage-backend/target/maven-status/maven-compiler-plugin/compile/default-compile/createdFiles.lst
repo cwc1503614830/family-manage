@@ -1,12 +1,16 @@
 com\example\familymanage\controller\FileUploadController.class
+com\example\familymanage\service\DashboardService.class
 com\example\familymanage\common\ApiResponse.class
 com\example\familymanage\dto\WealthAssetRequest.class
 com\example\familymanage\controller\GoodsManageController.class
+com\example\familymanage\dto\TodoItemRequest.class
 com\example\familymanage\dto\TravelDomesticRequest.class
+com\example\familymanage\service\TodoManageService.class
 com\example\familymanage\dto\GoodsLocationRequest.class
 com\example\familymanage\controller\FamilyAssetController.class
 com\example\familymanage\dto\StockChangeRequest.class
 com\example\familymanage\dto\KitchenIngredientRequest.class
+com\example\familymanage\controller\TodoManageController.class
 com\example\familymanage\service\AlbumManageService.class
 com\example\familymanage\controller\WealthManageController.class
 com\example\familymanage\dto\TravelDomesticNoteRequest.class

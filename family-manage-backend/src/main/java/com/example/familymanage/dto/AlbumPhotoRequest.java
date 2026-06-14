@@ -6,6 +6,7 @@ public class AlbumPhotoRequest {
     private String imageUrl;
     private Long themeId;
     private String remark;
+    private String takenAt;
 
     public String getImageName() {
         return imageName;
@@ -37,5 +38,13 @@ public class AlbumPhotoRequest {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public String getTakenAt() {
+        return takenAt;
+    }
+
+    public void setTakenAt(String takenAt) {
+        this.takenAt = takenAt;
     }
 }

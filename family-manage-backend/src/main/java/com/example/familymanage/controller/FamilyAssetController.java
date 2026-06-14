@@ -3,10 +3,10 @@ package com.example.familymanage.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.familymanage.common.ApiResponse;
 import com.example.familymanage.dto.AssetQuery;
-import com.example.familymanage.dto.AssetSummary;
 import com.example.familymanage.dto.StockChangeRequest;
 import com.example.familymanage.entity.FamilyAsset;
 import com.example.familymanage.security.RequirePermission;
+import com.example.familymanage.service.DashboardService;
 import com.example.familymanage.service.FamilyAssetService;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +25,11 @@ import java.util.Map;
 public class FamilyAssetController {
 
     private final FamilyAssetService familyAssetService;
+    private final DashboardService dashboardService;
 
-    public FamilyAssetController(FamilyAssetService familyAssetService) {
+    public FamilyAssetController(FamilyAssetService familyAssetService, DashboardService dashboardService) {
         this.familyAssetService = familyAssetService;
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping
@@ -38,8 +40,8 @@ public class FamilyAssetController {
 
     @GetMapping("/summary")
     @RequirePermission("asset:view")
-    public ApiResponse<AssetSummary> summary() {
-        return ApiResponse.ok(familyAssetService.getSummary());
+    public ApiResponse<Map<String, Object>> summary() {
+        return ApiResponse.ok(dashboardService.getDashboard());
     }
 
     @GetMapping("/options")

@@ -16,20 +16,34 @@
         >上传照片</button>
       </header>
 
-      <section class="album-photo-grid" :class="{ loading: detailLoading, 'album-mobile-photo-grid': isMobile }">
+      <section class="album-timeline" :class="{ loading: detailLoading, 'album-mobile-timeline': isMobile }">
         <article
-          v-for="photo in photos"
-          :key="photo.id"
-          class="album-photo-card"
-          :class="{ 'album-mobile-photo-item': isMobile }"
+          v-for="group in photoTimelineGroups"
+          :key="group.dateKey"
+          class="album-timeline-group"
         >
-          <div class="album-photo-card-image" @click="previewPhoto(photo)">
-            <img :src="photo.image_url" :alt="photo.image_name" />
-            <span v-if="!isMobile" class="album-photo-count-badge">{{ photo.image_name }}</span>
+          <div v-if="group.milestone" class="album-timeline-milestone">
+            <span>{{ group.milestone }}</span>
           </div>
-          <div v-if="!isMobile" class="album-photo-card-actions">
-            <button class="ghost-btn mini" type="button" @click="openPhotoForm(photo)">编辑</button>
-            <button class="ghost-btn mini danger-text" type="button" @click="removePhoto(photo)">删除</button>
+          <h3 class="album-timeline-date">{{ group.dateLabel }}</h3>
+          <div class="album-timeline-photos">
+            <div
+              v-for="photo in group.photos"
+              :key="photo.id"
+              class="album-timeline-photo-wrap"
+            >
+              <button
+                type="button"
+                class="album-timeline-photo"
+                @click="previewPhoto(photo)"
+              >
+                <img :src="photo.image_url" :alt="photo.image_name" />
+              </button>
+              <div v-if="!isMobile" class="album-timeline-photo-actions">
+                <button class="ghost-btn mini" type="button" @click="openPhotoForm(photo)">编辑</button>
+                <button class="ghost-btn mini danger-text" type="button" @click="removePhoto(photo)">删除</button>
+              </div>
+            </div>
           </div>
         </article>
       </section>
@@ -126,20 +140,30 @@
       <!-- 移动端：全部照片流 -->
       <section
         v-if="isMobile && mobileTab === 'photos'"
-        class="album-all-photo-grid"
+        class="album-timeline album-all-timeline"
         :class="{ loading: allPhotosLoading }"
       >
         <article
-          v-for="photo in allPhotos"
-          :key="photo.id"
-          class="album-all-photo-item"
-          @click="previewPhoto(photo)"
+          v-for="group in allPhotoTimelineGroups"
+          :key="group.dateKey"
+          class="album-timeline-group"
         >
-          <img :src="photo.image_url" :alt="photo.image_name" />
-          <span v-if="photo.theme_name" class="album-all-photo-tag">{{ photo.theme_name }}</span>
+          <h3 class="album-timeline-date">{{ group.dateLabel }}</h3>
+          <div class="album-timeline-photos">
+            <button
+              v-for="photo in group.photos"
+              :key="photo.id"
+              type="button"
+              class="album-timeline-photo"
+              @click="previewPhoto(photo)"
+            >
+              <img :src="photo.image_url" :alt="photo.image_name" />
+              <span v-if="photo.theme_name" class="album-all-photo-tag">{{ photo.theme_name }}</span>
+            </button>
+          </div>
         </article>
       </section>
-      <p v-if="isMobile && mobileTab === 'photos' && !allPhotosLoading && !allPhotos.length" class="album-empty">
+      <p v-if="isMobile && mobileTab === 'photos' && !allPhotosLoading && !allPhotoTimelineGroups.length" class="album-empty">
         暂无照片
       </p>
 
@@ -257,8 +281,10 @@ import {
   updateAlbumPhoto
 } from '../api/album'
 import { uploadFile } from '../api/upload'
+import { readPhotoTakenAt } from '../utils/exifDate'
+import { groupPhotosByDate } from '../utils/photoTimeline'
 
-const MOBILE_PHOTO_PAGE_SIZE = 60
+const MOBILE_PHOTO_PAGE_SIZE = 120
 
 export default {
   name: 'AlbumPhotoView',
@@ -278,7 +304,7 @@ export default {
       photos: [],
       photoTotal: 0,
       page: 1,
-      pageSize: 20,
+      pageSize: 60,
       allThemes: [],
       themeDialogVisible: false,
       themeForm: emptyThemeForm(),
@@ -294,6 +320,15 @@ export default {
   computed: {
     totalPages() {
       return Math.max(1, Math.ceil(this.photoTotal / this.pageSize))
+    },
+    photoTimelineGroups() {
+      return groupPhotosByDate(this.photos, {
+        referenceDate: this.activeTheme && this.activeTheme.created_at,
+        showMilestone: true
+      })
+    },
+    allPhotoTimelineGroups() {
+      return groupPhotosByDate(this.allPhotos)
     }
   },
   created() {
@@ -452,6 +487,7 @@ export default {
     async uploadSingleFile(file, replace) {
       this.uploading = true
       try {
+        const takenAt = await readPhotoTakenAt(file)
         const result = await uploadFile(file, 'album')
         const previewUrl = result.url || result.publicUrl || result.path || ''
         if (replace) {
@@ -462,7 +498,8 @@ export default {
           this.pendingUploads.push({
             previewUrl,
             imageUrl: previewUrl,
-            imageName: baseName || `照片${this.pendingUploads.length + 1}`
+            imageName: baseName || `照片${this.pendingUploads.length + 1}`,
+            takenAt
           })
         }
       } catch (error) {
@@ -507,7 +544,8 @@ export default {
           imageName: resolveAutoImageName(item.imageName || item.imageUrl, index),
           imageUrl: item.imageUrl,
           themeId,
-          remark: ''
+          remark: '',
+          takenAt: item.takenAt || ''
         }))
         await createAlbumPhotosBatch(batch)
       } else if (this.photoForm.imageUrl) {

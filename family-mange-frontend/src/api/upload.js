@@ -1,5 +1,5 @@
 import { http, unwrap } from './http'
-import { compressImage } from '../utils/compressImage'
+import { compressImage } from '../utils/imageCompress'
 
 export async function uploadFile(file, folder = 'clothes') {
   const compressed = await compressImage(file)
@@ -8,6 +8,6 @@ export async function uploadFile(file, folder = 'clothes') {
   return http.post('/files/upload', formData, {
     params: { folder },
     headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 120000
+    timeout: 60000
   }).then(unwrap)
 }
