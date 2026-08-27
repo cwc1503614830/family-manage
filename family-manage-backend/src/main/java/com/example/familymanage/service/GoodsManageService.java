@@ -65,15 +65,16 @@ public class GoodsManageService {
         jdbcTemplate.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO goods_item (item_name, area_code, purchase_time, expire_time, image_url, remark, created_by, created_at, updated_by, updated_at) "
-                            + "VALUES (?, ?, ?, ?, '', ?, ?, NOW(), ?, NOW())",
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, NOW())",
                     Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, request.getItemName().trim());
             statement.setString(2, request.getAreaCode().trim());
             statement.setDate(3, toDate(request.getPurchaseTime()));
             statement.setDate(4, toDate(request.getExpireTime()));
-            statement.setString(5, request.getRemark());
-            statement.setString(6, operator);
+            statement.setString(5, request.getImageUrl() == null ? "" : request.getImageUrl().trim());
+            statement.setString(6, request.getRemark());
             statement.setString(7, operator);
+            statement.setString(8, operator);
             return statement;
         }, keyHolder);
         Number key = keyHolder.getKey();
@@ -88,8 +89,10 @@ public class GoodsManageService {
         validateUpdateItem(request);
         ensureAreaCodeExists(request.getAreaCode().trim());
         jdbcTemplate.update(
-                "UPDATE goods_item SET area_code = ?, expire_time = ?, remark = ?, updated_by = ?, updated_at = NOW() WHERE id = ?",
-                request.getAreaCode().trim(), toDate(request.getExpireTime()), request.getRemark(), currentUsername(), id);
+                "UPDATE goods_item SET area_code = ?, expire_time = ?, image_url = ?, remark = ?, updated_by = ?, updated_at = NOW() WHERE id = ?",
+                request.getAreaCode().trim(), toDate(request.getExpireTime()),
+                request.getImageUrl() == null ? "" : request.getImageUrl().trim(),
+                request.getRemark(), currentUsername(), id);
         return getItem(id);
     }
 

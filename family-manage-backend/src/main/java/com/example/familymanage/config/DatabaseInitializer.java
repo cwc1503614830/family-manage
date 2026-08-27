@@ -580,10 +580,92 @@ public class DatabaseInitializer implements ApplicationRunner {
             jdbcTemplate.update("INSERT INTO sys_user_role (user_id, role_id) "
                     + "SELECT u.id, r.id FROM sys_user u JOIN sys_role r ON r.code = 'admin' WHERE u.username = 'admin'");
         }
+
+        ensureModuleMenusAndPermissions();
+    }
+
+    private void ensureModuleMenusAndPermissions() {
+        String[][] moduleMenus = {
+                {"goods:manage", "物品管理", "📦", "/goods", "GoodsLayout", "38"},
+                {"goods:item", "物品明细", "☰", "/goods/items", "GoodsItem", "39"},
+                {"goods:location", "存放位置", "⌖", "/goods/locations", "GoodsLocation", "40"},
+                {"kitchen:manage", "厨房管理", "🍳", "/kitchen", "KitchenLayout", "25"},
+                {"kitchen:dish", "菜品清单", "☰", "/kitchen/dishes", "KitchenDish", "26"},
+                {"kitchen:ingredient", "食材清单", "◈", "/kitchen/ingredients", "KitchenIngredient", "27"},
+                {"kitchen:cook", "制作记录", "⌖", "/kitchen/cook-records", "KitchenCookRecord", "28"},
+                {"travel:manage", "旅游管理", "✈", "/travel", "TravelLayout", "41"},
+                {"travel:wuhan", "武汉游", "⌂", "/travel/wuhan", "TravelWuhan", "42"},
+                {"travel:domestic", "国内游", "☰", "/travel/domestic", "TravelDomestic", "43"},
+                {"album:manage", "相册管理", "📷", "/album", "AlbumLayout", "35"},
+                {"album:photo", "相册", "☰", "/album/photos", "AlbumPhoto", "36"},
+                {"album:theme", "相册主题", "◈", "/album/themes", "AlbumTheme", "37"},
+                {"todo:manage", "代办管理", "✓", "/todo", "TodoLayout", "44"},
+                {"todo:item", "代办清单", "☰", "/todo/items", "TodoItem", "45"},
+        };
+
+        for (String[] menu : moduleMenus) {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM sys_menu WHERE code = ?",
+                    Integer.class, menu[0]);
+            if (count == null || count == 0) {
+                jdbcTemplate.update(
+                        "INSERT INTO sys_menu (name, code, icon, path, component, web_url, sort_no, visible) VALUES (?,?,?,?,?,?,?,1)",
+                        menu[1], menu[0], menu[2], menu[3], menu[4], "", Integer.parseInt(menu[5]));
+            } else {
+                jdbcTemplate.update(
+                        "UPDATE sys_menu SET name=?, icon=?, path=?, component=?, sort_no=?, visible=1 WHERE code=?",
+                        menu[1], menu[2], menu[3], menu[4], Integer.parseInt(menu[5]), menu[0]);
+            }
+        }
+
+        setParentForChildren("goods:manage", "goods:item", "goods:location");
+        setParentForChildren("kitchen:manage", "kitchen:dish", "kitchen:ingredient", "kitchen:cook");
+        setParentForChildren("travel:manage", "travel:wuhan", "travel:domestic");
+        setParentForChildren("album:manage", "album:photo", "album:theme");
+        setParentForChildren("todo:manage", "todo:item");
+
+        jdbcTemplate.update(
+                "INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                        + "SELECT r.id, m.id FROM sys_role r CROSS JOIN sys_menu m "
+                        + "WHERE r.code = 'admin' AND m.code IN ("
+                        + "'goods:manage','goods:item','goods:location',"
+                        + "'kitchen:manage','kitchen:dish','kitchen:ingredient','kitchen:cook',"
+                        + "'travel:manage','travel:wuhan','travel:domestic',"
+                        + "'album:manage','album:photo','album:theme',"
+                        + "'todo:manage','todo:item')");
+
+        jdbcTemplate.update(
+                "INSERT IGNORE INTO sys_role_menu (role_id, menu_id) "
+                        + "SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ("
+                        + "'goods:manage','goods:item','goods:location',"
+                        + "'kitchen:manage','kitchen:dish','kitchen:ingredient','kitchen:cook',"
+                        + "'travel:manage','travel:wuhan','travel:domestic',"
+                        + "'album:manage','album:photo','album:theme',"
+                        + "'todo:manage','todo:item') "
+                        + "WHERE r.code = 'member'");
     }
 
     private Long getMenuId(String code) {
         java.util.List<Long> ids = jdbcTemplate.queryForList("SELECT id FROM sys_menu WHERE code = ?", Long.class, code);
         return ids.isEmpty() ? null : ids.get(0);
+    }
+
+    private void setParentForChildren(String parentCode, String... childCodes) {
+        Long parentId = getMenuId(parentCode);
+        if (parentId == null) {
+            return;
+        }
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < childCodes.length; i++) {
+            if (i > 0) {
+                placeholders.append(",");
+            }
+            placeholders.append("?");
+        }
+        String sql = "UPDATE sys_menu SET parent_id=?, visible=1 WHERE code IN (" + placeholders + ")";
+        Object[] args = new Object[childCodes.length + 1];
+        args[0] = parentId;
+        System.arraycopy(childCodes, 0, args, 1, childCodes.length);
+        jdbcTemplate.update(sql, args);
     }
 }

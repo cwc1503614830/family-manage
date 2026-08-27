@@ -152,6 +152,7 @@ copy /y "%SCRIPT_DIR%nginx.conf" "%BUILD_CONTEXT_DIR%\frontend\nginx.conf" >nul
 
 echo [5/10] Building backend image...
 echo       Base image: %BACKEND_BASE%
+set DOCKER_BUILDKIT=0
 docker build --build-arg BASE_IMAGE=%BACKEND_BASE% -t "%BACKEND_IMAGE%:%TAG%" "%BUILD_CONTEXT_DIR%\backend"
 if errorlevel 1 (
   echo [ERROR] Backend docker image build failed.
@@ -214,6 +215,13 @@ rem e.g. call :pull_base "docker.1ms.run/library/eclipse-temurin:8-jre" "eclipse
 set "PULL_IMAGE=%~1"
 set "PULL_STANDARD=%~2"
 
+docker image inspect "%PULL_STANDARD%" >nul 2>nul
+if not errorlevel 1 (
+    docker tag "%PULL_STANDARD%" "%PULL_IMAGE%" 2>nul
+    echo       [SKIP] %PULL_STANDARD% already exists locally, tagged as %PULL_IMAGE%
+    exit /b 0
+)
+
 echo       Pulling %PULL_IMAGE% ...
 docker pull "%PULL_IMAGE%" 2>nul
 if not errorlevel 1 (
@@ -238,6 +246,7 @@ if not "!FB1!"=="" (
     docker pull "!FB1!/library/!PULL_STANDARD!" 2>nul
     if not errorlevel 1 (
         docker tag "!FB1!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
+        docker tag "!FB1!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
         echo       [OK] Pulled from !FB1! and tagged as %PULL_STANDARD%
         exit /b 0
     )
@@ -248,6 +257,7 @@ if not "!FB2!"=="" (
     docker pull "!FB2!/library/!PULL_STANDARD!" 2>nul
     if not errorlevel 1 (
         docker tag "!FB2!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
+        docker tag "!FB2!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
         echo       [OK] Pulled from !FB2! and tagged as %PULL_STANDARD%
         exit /b 0
     )
@@ -258,6 +268,7 @@ if not "!FB3!"=="" (
     docker pull "!FB3!/library/!PULL_STANDARD!" 2>nul
     if not errorlevel 1 (
         docker tag "!FB3!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
+        docker tag "!FB3!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
         echo       [OK] Pulled from !FB3! and tagged as %PULL_STANDARD%
         exit /b 0
     )
