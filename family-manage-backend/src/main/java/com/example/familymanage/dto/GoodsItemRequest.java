@@ -6,6 +6,7 @@ public class GoodsItemRequest {
     private String areaCode;
     private String purchaseTime;
     private String expireTime;
+    private String imageUrl;
     private String remark;
 
     public String getItemName() {
@@ -38,6 +39,14 @@ public class GoodsItemRequest {
 
     public void setExpireTime(String expireTime) {
         this.expireTime = expireTime;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getRemark() {

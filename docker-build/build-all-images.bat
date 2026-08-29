@@ -21,7 +21,7 @@ if "%HARBOR_PROJECT%"=="" set "HARBOR_PROJECT=family-manage"
 set "BACKEND_IMAGE=family-manage-backend"
 set "FRONTEND_IMAGE=family-manage-frontend"
 
-set "HARBOR_HOST=192.168.236.129:80"
+set "HARBOR_HOST=192.168.216.140:8091"
 if not "%HARBOR_HOST_OVERRIDE%"=="" set "HARBOR_HOST=%HARBOR_HOST_OVERRIDE%"
 
 set "HARBOR_USER=admin"
@@ -33,7 +33,9 @@ if not "%HARBOR_PASS_OVERRIDE%"=="" set "HARBOR_PASS=%HARBOR_PASS_OVERRIDE%"
 set "REMOTE_BACKEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-backend"
 set "REMOTE_FRONTEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-frontend"
 
-rem Override with empty value to use Docker Hub directly: set DOCKER_MIRROR=
+rem Default mirror: docker.m.daocloud.io (Daocloud, China)
+rem Switch mirror: set DOCKER_MIRROR=docker.1panel.live
+rem Use Docker Hub directly: set DOCKER_MIRROR=
 if not defined DOCKER_MIRROR set "DOCKER_MIRROR=docker.m.daocloud.io"
 set "BACKEND_BASE=%DOCKER_MIRROR%/library/eclipse-temurin:8-jre"
 set "FRONTEND_BASE=%DOCKER_MIRROR%/library/nginx:1.27-alpine"
@@ -47,7 +49,9 @@ echo ============================================================
 echo Family Manage - Build and Push to Harbor
 echo Root:     %ROOT_DIR%
 echo Tag:      %TAG%
-echo Local:    %BACKEND_IMAGE%:%TAG%, %FRONTEND_IMAGE%:%TAG%
+echo Mirror:   %DOCKER_MIRROR%
+echo Backend:  %BACKEND_BASE%
+echo Frontend: %FRONTEND_BASE%
 echo Harbor:   %HARBOR_HOST%/%HARBOR_PROJECT%
 echo Remote:   %REMOTE_BACKEND%:%TAG%
 echo           %REMOTE_FRONTEND%:%TAG%
@@ -98,7 +102,11 @@ if not exist "%FRONTEND_DIR%\package.json" (
   goto :fail
 )
 
-echo [1/9] Building backend jar...
+echo [1/10] Pre-pulling base images (with mirror fallback)...
+call :pull_base "%BACKEND_BASE%" "eclipse-temurin:8-jre" || goto :fail
+call :pull_base "%FRONTEND_BASE%" "nginx:1.27-alpine" || goto :fail
+
+echo [2/10] Building backend jar...
 echo       (first run may download Maven dependencies, please wait...)
 pushd "%BACKEND_DIR%"
 call mvn -DskipTests package
@@ -115,7 +123,7 @@ if not exist "%BACKEND_JAR%" (
   goto :fail
 )
 
-echo [2/9] Building frontend dist...
+echo [3/10] Building frontend dist...
 pushd "%FRONTEND_DIR%"
 call npm run build
 if errorlevel 1 (
@@ -130,7 +138,7 @@ if not exist "%FRONTEND_DIR%\dist\index.html" (
   goto :fail
 )
 
-echo [3/9] Preparing Docker build context...
+echo [4/10] Preparing Docker build context...
 if exist "%BUILD_CONTEXT_DIR%" rmdir /s /q "%BUILD_CONTEXT_DIR%"
 mkdir "%BUILD_CONTEXT_DIR%\backend"
 mkdir "%BUILD_CONTEXT_DIR%\frontend"
@@ -142,16 +150,16 @@ xcopy "%FRONTEND_DIR%\dist" "%BUILD_CONTEXT_DIR%\frontend\dist\" /e /i /y >nul
 copy /y "%SCRIPT_DIR%Dockerfile.frontend" "%BUILD_CONTEXT_DIR%\frontend\Dockerfile" >nul
 copy /y "%SCRIPT_DIR%nginx.conf" "%BUILD_CONTEXT_DIR%\frontend\nginx.conf" >nul
 
-echo [4/9] Building backend image...
+echo [5/10] Building backend image...
 echo       Base image: %BACKEND_BASE%
+set DOCKER_BUILDKIT=0
 docker build --build-arg BASE_IMAGE=%BACKEND_BASE% -t "%BACKEND_IMAGE%:%TAG%" "%BUILD_CONTEXT_DIR%\backend"
 if errorlevel 1 (
   echo [ERROR] Backend docker image build failed.
-  echo         Try another mirror: set DOCKER_MIRROR=docker.1ms.run
   goto :fail
 )
 
-echo [5/9] Building frontend image...
+echo [6/10] Building frontend image...
 echo       Base image: %FRONTEND_BASE%
 docker build --build-arg BASE_IMAGE=%FRONTEND_BASE% -t "%FRONTEND_IMAGE%:%TAG%" "%BUILD_CONTEXT_DIR%\frontend"
 if errorlevel 1 (
@@ -159,7 +167,7 @@ if errorlevel 1 (
   goto :fail
 )
 
-echo [6/9] Logging in to Harbor...
+echo [7/10] Logging in to Harbor...
 echo %HARBOR_PASS%| docker login %HARBOR_HOST% -u %HARBOR_USER% --password-stdin
 if errorlevel 1 (
   echo [ERROR] Harbor login failed.
@@ -167,13 +175,13 @@ if errorlevel 1 (
   goto :fail
 )
 
-echo [7/9] Tagging images for Harbor...
+echo [8/10] Tagging images for Harbor...
 docker tag "%BACKEND_IMAGE%:%TAG%" "%REMOTE_BACKEND%:%TAG%"
 if errorlevel 1 goto :fail
 docker tag "%FRONTEND_IMAGE%:%TAG%" "%REMOTE_FRONTEND%:%TAG%"
 if errorlevel 1 goto :fail
 
-echo [8/9] Pushing backend image...
+echo [9/10] Pushing backend image...
 docker push "%REMOTE_BACKEND%:%TAG%"
 if errorlevel 1 (
   echo [ERROR] Backend push failed.
@@ -181,7 +189,7 @@ if errorlevel 1 (
   goto :fail
 )
 
-echo [9/9] Pushing frontend image...
+echo [10/10] Pushing frontend image...
 docker push "%REMOTE_FRONTEND%:%TAG%"
 if errorlevel 1 (
   echo [ERROR] Frontend push failed.
@@ -201,6 +209,75 @@ echo Done. Press any key to close...
 pause >nul
 exit /b 0
 
+:pull_base
+rem Usage: call :pull_base <full_image> <standard_name>
+rem e.g. call :pull_base "docker.1ms.run/library/eclipse-temurin:8-jre" "eclipse-temurin:8-jre"
+set "PULL_IMAGE=%~1"
+set "PULL_STANDARD=%~2"
+
+docker image inspect "%PULL_STANDARD%" >nul 2>nul
+if not errorlevel 1 (
+    docker tag "%PULL_STANDARD%" "%PULL_IMAGE%" 2>nul
+    echo       [SKIP] %PULL_STANDARD% already exists locally, tagged as %PULL_IMAGE%
+    exit /b 0
+)
+
+echo       Pulling %PULL_IMAGE% ...
+docker pull "%PULL_IMAGE%" 2>nul
+if not errorlevel 1 (
+    docker tag "%PULL_IMAGE%" "%PULL_STANDARD%" 2>nul
+    echo       [OK] Pulled and tagged as %PULL_STANDARD%
+    exit /b 0
+)
+
+echo       [WARN] Failed from %PULL_IMAGE%, trying fallback mirrors...
+
+rem Fallback mirrors list (in order of preference)
+set "FALLBACK_MIRRORS=docker.1panel.live,docker.xuanyuan.me,docker.1ms.run"
+
+for /f "tokens=1-3 delims=, " %%A in ("%FALLBACK_MIRRORS%") do (
+    set "FB1=%%A"
+    set "FB2=%%B"
+    set "FB3=%%C"
+)
+
+if not "!FB1!"=="" (
+    echo       Trying !FB1!/library/!PULL_STANDARD! ...
+    docker pull "!FB1!/library/!PULL_STANDARD!" 2>nul
+    if not errorlevel 1 (
+        docker tag "!FB1!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
+        docker tag "!FB1!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
+        echo       [OK] Pulled from !FB1! and tagged as %PULL_STANDARD%
+        exit /b 0
+    )
+)
+
+if not "!FB2!"=="" (
+    echo       Trying !FB2!/library/!PULL_STANDARD! ...
+    docker pull "!FB2!/library/!PULL_STANDARD!" 2>nul
+    if not errorlevel 1 (
+        docker tag "!FB2!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
+        docker tag "!FB2!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
+        echo       [OK] Pulled from !FB2! and tagged as %PULL_STANDARD%
+        exit /b 0
+    )
+)
+
+if not "!FB3!"=="" (
+    echo       Trying !FB3!/library/!PULL_STANDARD! ...
+    docker pull "!FB3!/library/!PULL_STANDARD!" 2>nul
+    if not errorlevel 1 (
+        docker tag "!FB3!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
+        docker tag "!FB3!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
+        echo       [OK] Pulled from !FB3! and tagged as %PULL_STANDARD%
+        exit /b 0
+    )
+)
+
+echo       [ERROR] All mirrors failed for %PULL_STANDARD%
+echo       Please check network or set DOCKER_MIRROR to an accessible mirror
+exit /b 1
+
 :fail
 echo.
 echo Build or push failed. Press any key to close...
@@ -218,6 +295,13 @@ echo.
 echo Environment overrides:
 echo   DOCKER_MIRROR, HARBOR_HOST_OVERRIDE, HARBOR_USER_OVERRIDE, HARBOR_PASS_OVERRIDE
 echo.
+echo Available mirrors (China):
+echo   docker.m.daocloud.io   (default, Daocloud)
+echo   docker.1panel.live     (1Panel)
+echo   docker.xuanyuan.me      (Xuanyuan)
+echo   docker.1ms.run        (1ms)
+echo.
 echo Example:
 echo   build-all-images.bat v1.0.0 family-manage
+echo   set DOCKER_MIRROR=docker.1panel.live && build-all-images.bat
 exit /b 0

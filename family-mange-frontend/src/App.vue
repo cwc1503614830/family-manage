@@ -308,6 +308,7 @@ const MOBILE_TAB_WHITELIST = [
   { code: 'asset:view', name: '全部资产', icon: '▦' },
   { code: 'album:photo', name: '相册', icon: '📷' },
   { code: 'clothes:item', name: '衣服明细', icon: '⌥' },
+  { code: 'goods:item', name: '物品明细', icon: '🎒' },
   { code: 'kitchen:dish', name: '菜品清单', icon: '🍳' },
   { code: 'kitchen:ingredient', name: '食材清单', icon: '🥬' },
   { code: 'todo:item', name: '代办清单', icon: '✓' },

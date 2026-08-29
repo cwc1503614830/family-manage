@@ -191,9 +191,24 @@ INSERT IGNORE INTO sys_menu (name, code, icon, path, component, web_url, sort_no
 ('衣服明细', 'clothes:item', '☰', '/clothes/items', 'ClothesItem', '', 21, 1),
 ('衣服类型', 'clothes:type', '◈', '/clothes/types', 'ClothesType', '', 22, 1),
 ('存放位置', 'clothes:location', '⌖', '/clothes/locations', 'ClothesLocation', '', 23, 1),
+('厨房管理', 'kitchen:manage', '🍳', '/kitchen', 'KitchenLayout', '', 25, 1),
+('菜品清单', 'kitchen:dish', '☰', '/kitchen/dishes', 'KitchenDish', '', 26, 1),
+('食材清单', 'kitchen:ingredient', '◈', '/kitchen/ingredients', 'KitchenIngredient', '', 27, 1),
+('制作记录', 'kitchen:cook', '⌖', '/kitchen/cook-records', 'KitchenCookRecord', '', 28, 1),
 ('财富管理', 'wealth:manage', '￥', '/wealth', 'WealthLayout', '', 30, 1),
 ('资产总览', 'wealth:overview', '☰', '/wealth/assets', 'WealthOverview', '', 31, 1),
 ('资产类型', 'wealth:type', '◈', '/wealth/types', 'WealthType', '', 32, 1),
+('相册管理', 'album:manage', '📷', '/album', 'AlbumLayout', '', 35, 1),
+('相册', 'album:photo', '☰', '/album/photos', 'AlbumPhoto', '', 36, 1),
+('相册主题', 'album:theme', '◈', '/album/themes', 'AlbumTheme', '', 37, 1),
+('物品管理', 'goods:manage', '📦', '/goods', 'GoodsLayout', '', 38, 1),
+('物品明细', 'goods:item', '☰', '/goods/items', 'GoodsItem', '', 39, 1),
+('存放位置', 'goods:location', '⌖', '/goods/locations', 'GoodsLocation', '', 40, 1),
+('旅游管理', 'travel:manage', '✈', '/travel', 'TravelLayout', '', 41, 1),
+('武汉游', 'travel:wuhan', '⌂', '/travel/wuhan', 'TravelWuhan', '', 42, 1),
+('国内游', 'travel:domestic', '☰', '/travel/domestic', 'TravelDomestic', '', 43, 1),
+('代办管理', 'todo:manage', '✓', '/todo', 'TodoLayout', '', 44, 1),
+('代办清单', 'todo:item', '☰', '/todo/items', 'TodoItem', '', 45, 1),
 ('系统管理', 'system:manage', '⚙', '/system', 'SystemLayout', '', 80, 1),
 ('用户管理', 'system:user', '◉', '/system/users', 'SystemUser', '', 81, 1),
 ('角色管理', 'system:role', '◇', '/system/roles', 'SystemRole', '', 82, 1),
@@ -210,9 +225,34 @@ SET child.parent_id = parent.id
 WHERE child.code IN ('clothes:item', 'clothes:type', 'clothes:location');
 
 UPDATE sys_menu child
+JOIN sys_menu parent ON parent.code = 'kitchen:manage'
+SET child.parent_id = parent.id
+WHERE child.code IN ('kitchen:dish', 'kitchen:ingredient', 'kitchen:cook');
+
+UPDATE sys_menu child
 JOIN sys_menu parent ON parent.code = 'wealth:manage'
 SET child.parent_id = parent.id
 WHERE child.code IN ('wealth:overview', 'wealth:type');
+
+UPDATE sys_menu child
+JOIN sys_menu parent ON parent.code = 'album:manage'
+SET child.parent_id = parent.id
+WHERE child.code IN ('album:photo', 'album:theme');
+
+UPDATE sys_menu child
+JOIN sys_menu parent ON parent.code = 'goods:manage'
+SET child.parent_id = parent.id
+WHERE child.code IN ('goods:item', 'goods:location');
+
+UPDATE sys_menu child
+JOIN sys_menu parent ON parent.code = 'travel:manage'
+SET child.parent_id = parent.id
+WHERE child.code IN ('travel:wuhan', 'travel:domestic');
+
+UPDATE sys_menu child
+JOIN sys_menu parent ON parent.code = 'todo:manage'
+SET child.parent_id = parent.id
+WHERE child.code = 'todo:item';
 
 INSERT IGNORE INTO sys_role (code, name, remark) VALUES
 ('admin', '家庭管理员', '拥有全部系统权限'),
@@ -230,7 +270,27 @@ SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('clothes:manage'
 WHERE r.code = 'member';
 
 INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
+SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('kitchen:manage', 'kitchen:dish', 'kitchen:ingredient', 'kitchen:cook')
+WHERE r.code = 'member';
+
+INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
 SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('wealth:manage', 'wealth:overview', 'wealth:type')
+WHERE r.code = 'member';
+
+INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
+SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('album:manage', 'album:photo', 'album:theme')
+WHERE r.code = 'member';
+
+INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
+SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('goods:manage', 'goods:item', 'goods:location')
+WHERE r.code = 'member';
+
+INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
+SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('travel:manage', 'travel:wuhan', 'travel:domestic')
+WHERE r.code = 'member';
+
+INSERT IGNORE INTO sys_role_menu (role_id, menu_id)
+SELECT r.id, m.id FROM sys_role r JOIN sys_menu m ON m.code IN ('todo:manage', 'todo:item')
 WHERE r.code = 'member';
 
 INSERT IGNORE INTO sys_user (username, password_hash, display_name, status) VALUES

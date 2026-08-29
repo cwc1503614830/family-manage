@@ -114,6 +114,28 @@
             <input v-model="form.expireTime" type="date" />
           </label>
           <label class="wide">
+            <span>物品图片</span>
+            <div class="goods-upload">
+              <div v-if="form.imageUrl" class="goods-preview">
+                <img :src="form.imageUrl" alt="预览图" />
+                <button class="ghost-btn mini" type="button" @click="clearImage">移除</button>
+              </div>
+              <div class="goods-upload-actions">
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="goods-file-input"
+                  @change="handleImageSelect"
+                />
+                <button class="ghost-btn" type="button" :disabled="uploading" @click="triggerFileSelect">
+                  {{ uploading ? '上传中...' : form.imageUrl ? '更换图片' : '选择图片' }}
+                </button>
+                <span v-if="uploadError" class="form-error">{{ uploadError }}</span>
+              </div>
+            </div>
+          </label>
+          <label class="wide">
             <span>备注</span>
             <textarea v-model.trim="form.remark" rows="3" placeholder="记录用途、规格或查找提示"></textarea>
           </label>
@@ -138,6 +160,7 @@ import {
   listGoodsItems,
   updateGoodsItem
 } from '../api/goods'
+import { uploadFile } from '../api/upload'
 
 export default {
   name: 'GoodsItemView',
@@ -153,6 +176,8 @@ export default {
       pageSize: 10,
       dialogVisible: false,
       editingId: null,
+      uploading: false,
+      uploadError: '',
       selectedIds: [],
       form: emptyForm(),
       isMobile: false,
@@ -172,9 +197,9 @@ export default {
         { key: 'actions', label: '操作', width: 150, slot: 'actions' }
       ],
       mobileColumns: [
+        { key: 'image', label: '图片', width: 48, slot: 'image' },
         { key: 'item_name', label: '物品名称', width: 96 },
-        { key: 'area_name', label: '存放位置', width: 108 },
-        { key: 'expire_time', label: '过期时间', width: 108, slot: 'expire_time' }
+        { key: 'area_name', label: '存放位置', width: 108 }
       ]
     }
   },
@@ -250,12 +275,15 @@ export default {
       await this.loadOptions()
       this.editingId = row ? row.id : null
       this.saving = false
+      this.uploading = false
+      this.uploadError = ''
       this.form = row
         ? {
             itemName: row.item_name,
             areaCode: row.area_code,
             purchaseTime: formatDateInput(row.purchase_time),
             expireTime: formatDateInput(row.expire_time),
+            imageUrl: row.image_url || '',
             remark: row.remark || ''
           }
         : emptyForm()
@@ -263,6 +291,8 @@ export default {
     },
     closeForm() {
       this.dialogVisible = false
+      this.uploading = false
+      this.uploadError = ''
     },
     buildCreatePayload() {
       return {
@@ -270,6 +300,7 @@ export default {
         areaCode: this.form.areaCode,
         purchaseTime: this.form.purchaseTime || '',
         expireTime: this.form.expireTime || '',
+        imageUrl: this.form.imageUrl || '',
         remark: this.form.remark || ''
       }
     },
@@ -277,11 +308,12 @@ export default {
       return {
         areaCode: this.form.areaCode,
         expireTime: this.form.expireTime || '',
+        imageUrl: this.form.imageUrl || '',
         remark: this.form.remark || ''
       }
     },
     async submitForm() {
-      if (this.saving) {
+      if (this.saving || this.uploading) {
         return
       }
       if (!this.form.areaCode) {
@@ -311,6 +343,34 @@ export default {
       } finally {
         this.saving = false
       }
+    },
+    triggerFileSelect() {
+      this.$refs.fileInput.click()
+    },
+    async handleImageSelect(event) {
+      const file = event.target.files && event.target.files[0]
+      event.target.value = ''
+      if (!file) {
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+        this.uploadError = '请选择图片文件'
+        return
+      }
+      this.uploadError = ''
+      this.uploading = true
+      try {
+        const result = await uploadFile(file, 'goods')
+        this.form.imageUrl = result.url || ''
+      } catch (error) {
+        this.uploadError = error.message || '图片上传失败'
+      } finally {
+        this.uploading = false
+      }
+    },
+    clearImage() {
+      this.form.imageUrl = ''
+      this.uploadError = ''
     },
     isSelected(id) {
       return this.selectedIds.includes(id)
@@ -383,6 +443,7 @@ function emptyForm() {
     areaCode: '',
     purchaseTime: '',
     expireTime: '',
+    imageUrl: '',
     remark: ''
   }
 }
@@ -443,5 +504,58 @@ function normalizeItemRow(row) {
 .goods-item-table.loading {
   opacity: 0.6;
   pointer-events: none;
+}
+
+.goods-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.goods-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.goods-preview img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--parchment);
+}
+
+.goods-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.goods-file-input {
+  display: none;
+}
+
+.clothes-image-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.clothes-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid var(--parchment);
+}
+
+.clothes-no-image {
+  color: var(--ink-ghost);
+  font-size: 12px;
 }
 </style>

@@ -24,7 +24,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
-HARBOR_HOST="${HARBOR_HOST:-192.168.236.129:80}"
+HARBOR_HOST="${HARBOR_HOST:-192.168.216.140:8091}"
 HARBOR_USER="${HARBOR_USER:-admin}"
 HARBOR_PASS="${HARBOR_PASS:-Harbor12345}"
 
@@ -36,7 +36,7 @@ BACKEND_NAME="${BACKEND_NAME:-family-manage-backend}"
 FRONTEND_NAME="${FRONTEND_NAME:-family-manage-frontend}"
 BACKEND_PORT="${BACKEND_PORT:-12300}"
 FRONTEND_PORT="${FRONTEND_PORT:-8080}"
-SPRING_PROFILE="${SPRING_PROFILE:-dev}"
+SPRING_PROFILE="${SPRING_PROFILE:-prd}"
 
 REMOTE_BACKEND="${HARBOR_HOST}/${HARBOR_PROJECT}/family-manage-backend:${TAG}"
 REMOTE_FRONTEND="${HARBOR_HOST}/${HARBOR_PROJECT}/family-manage-frontend:${TAG}"
