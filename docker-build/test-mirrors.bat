@@ -8,7 +8,11 @@ echo.
 
 set "TEST_IMAGE=library/nginx:1.27-alpine"
 
-set "MIRRORS=docker.1ms.run,docker.nju.edu.cn,docker.m.daocloud.io,docker.xuanyuan.me,docker.1panel.live,mirror.ccs.tencentyun.com,hub-mirror.c.163.com"
+rem Mirrors verified on this network (2026-08-29):
+rem   FAIL: docker.nju.edu.cn (403 Forbidden)
+rem   FAIL: mirror.ccs.tencentyun.com, hub-mirror.c.163.com (DNS resolution failed)
+rem Order: mirrors that passed the last test first
+set "MIRRORS=docker.1ms.run docker.m.daocloud.io docker.xuanyuan.me docker.1panel.live"
 
 for /f "tokens=1-10 delims=, " %%A in ("%MIRRORS%") do (
     set "M1=%%A"
