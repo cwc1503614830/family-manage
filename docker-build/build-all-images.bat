@@ -21,7 +21,7 @@ if "%HARBOR_PROJECT%"=="" set "HARBOR_PROJECT=family-manage"
 set "BACKEND_IMAGE=family-manage-backend"
 set "FRONTEND_IMAGE=family-manage-frontend"
 
-set "HARBOR_HOST=192.168.216.140:8091"
+set "HARBOR_HOST=192.168.236.129:80"
 if not "%HARBOR_HOST_OVERRIDE%"=="" set "HARBOR_HOST=%HARBOR_HOST_OVERRIDE%"
 
 set "HARBOR_USER=admin"
@@ -33,10 +33,10 @@ if not "%HARBOR_PASS_OVERRIDE%"=="" set "HARBOR_PASS=%HARBOR_PASS_OVERRIDE%"
 set "REMOTE_BACKEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-backend"
 set "REMOTE_FRONTEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-frontend"
 
-rem Default mirror: docker.m.daocloud.io (Daocloud, China)
-rem Switch mirror: set DOCKER_MIRROR=docker.1panel.live
+rem Default mirror: docker.1ms.run (verified by test-mirrors.bat on this network)
+rem Switch mirror: set DOCKER_MIRROR=docker.m.daocloud.io
 rem Use Docker Hub directly: set DOCKER_MIRROR=
-if not defined DOCKER_MIRROR set "DOCKER_MIRROR=docker.m.daocloud.io"
+if not defined DOCKER_MIRROR set "DOCKER_MIRROR=docker.1ms.run"
 set "BACKEND_BASE=%DOCKER_MIRROR%/library/eclipse-temurin:8-jre"
 set "FRONTEND_BASE=%DOCKER_MIRROR%/library/nginx:1.27-alpine"
 if "%DOCKER_MIRROR%"=="" (
@@ -223,59 +223,33 @@ if not errorlevel 1 (
 )
 
 echo       Pulling %PULL_IMAGE% ...
-docker pull "%PULL_IMAGE%" 2>nul
+docker pull "%PULL_IMAGE%"
 if not errorlevel 1 (
     docker tag "%PULL_IMAGE%" "%PULL_STANDARD%" 2>nul
     echo       [OK] Pulled and tagged as %PULL_STANDARD%
     exit /b 0
 )
 
-echo       [WARN] Failed from %PULL_IMAGE%, trying fallback mirrors...
+echo       [WARN] Failed from %PULL_IMAGE%, trying fallback mirrors ...
 
-rem Fallback mirrors list (in order of preference)
-set "FALLBACK_MIRRORS=docker.1panel.live,docker.xuanyuan.me,docker.1ms.run"
+rem Fallback mirrors list — only verified mirrors on this network, ordered by speed test result
+rem  (docker.nju.edu.cn 403, mirror.ccs.tencentyun.com/hub-mirror.c.163.com DNS fail — removed 2026-08-29)
+set "FALLBACK_MIRRORS=docker.m.daocloud.io docker.xuanyuan.me docker.1panel.live docker.1ms.run"
 
-for /f "tokens=1-3 delims=, " %%A in ("%FALLBACK_MIRRORS%") do (
-    set "FB1=%%A"
-    set "FB2=%%B"
-    set "FB3=%%C"
-)
-
-if not "!FB1!"=="" (
-    echo       Trying !FB1!/library/!PULL_STANDARD! ...
-    docker pull "!FB1!/library/!PULL_STANDARD!" 2>nul
+for %%M in (%FALLBACK_MIRRORS%) do (
+    echo       Trying %%M/library/!PULL_STANDARD! ...
+    docker pull "%%M/library/!PULL_STANDARD!"
     if not errorlevel 1 (
-        docker tag "!FB1!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
-        docker tag "!FB1!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
-        echo       [OK] Pulled from !FB1! and tagged as %PULL_STANDARD%
+        docker tag "%%M/library/!PULL_STANDARD!" "!PULL_STANDARD!" 2>nul
+        docker tag "%%M/library/!PULL_STANDARD!" "!PULL_IMAGE!" 2>nul
+        echo       [OK] Pulled from %%M and tagged as !PULL_STANDARD!
         exit /b 0
     )
-)
-
-if not "!FB2!"=="" (
-    echo       Trying !FB2!/library/!PULL_STANDARD! ...
-    docker pull "!FB2!/library/!PULL_STANDARD!" 2>nul
-    if not errorlevel 1 (
-        docker tag "!FB2!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
-        docker tag "!FB2!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
-        echo       [OK] Pulled from !FB2! and tagged as %PULL_STANDARD%
-        exit /b 0
-    )
-)
-
-if not "!FB3!"=="" (
-    echo       Trying !FB3!/library/!PULL_STANDARD! ...
-    docker pull "!FB3!/library/!PULL_STANDARD!" 2>nul
-    if not errorlevel 1 (
-        docker tag "!FB3!/library/!PULL_STANDARD!" "%PULL_STANDARD%" 2>nul
-        docker tag "!FB3!/library/!PULL_STANDARD!" "%PULL_IMAGE%" 2>nul
-        echo       [OK] Pulled from !FB3! and tagged as %PULL_STANDARD%
-        exit /b 0
-    )
+    echo       [SKIP] %%M failed, continuing...
 )
 
 echo       [ERROR] All mirrors failed for %PULL_STANDARD%
-echo       Please check network or set DOCKER_MIRROR to an accessible mirror
+echo       Please check network, or set DOCKER_MIRROR to an accessible mirror
 exit /b 1
 
 :fail
@@ -295,13 +269,20 @@ echo.
 echo Environment overrides:
 echo   DOCKER_MIRROR, HARBOR_HOST_OVERRIDE, HARBOR_USER_OVERRIDE, HARBOR_PASS_OVERRIDE
 echo.
-echo Available mirrors (China):
-echo   docker.m.daocloud.io   (default, Daocloud)
-echo   docker.1panel.live     (1Panel)
-echo   docker.xuanyuan.me      (Xuanyuan)
-echo   docker.1ms.run        (1ms)
+echo Mirrors VERIFIED on your network (last test 2026-08-29, sorted by speed):
+echo   docker.1ms.run            (default, fastest on your test)
+echo   docker.m.daocloud.io      (Daocloud, fallback 1)
+echo   docker.xuanyuan.me         (Xuanyuan, fallback 2)
+echo   docker.1panel.live         (1Panel, fallback 3)
 echo.
-echo Example:
+echo Known unavailable on your network (skipped):
+echo   docker.nju.edu.cn         (403 Forbidden)
+echo   mirror.ccs.tencentyun.com  (DNS: no such host)
+echo   hub-mirror.c.163.com       (DNS: no such host)
+echo.
+echo Examples:
 echo   build-all-images.bat v1.0.0 family-manage
-echo   set DOCKER_MIRROR=docker.1panel.live && build-all-images.bat
+echo   set DOCKER_MIRROR=docker.m.daocloud.io ^&^& build-all-images.bat
+echo.
+echo Before building, you can run test-mirrors.bat to find the fastest mirror.
 exit /b 0
