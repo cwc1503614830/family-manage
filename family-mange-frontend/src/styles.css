@@ -2831,7 +2831,7 @@ body.modal-open {
   }
 
   .admin-table table {
-    min-width: 420px;
+    min-width: 400px;
   }
 
   .admin-table th,
@@ -2873,6 +2873,38 @@ body.modal-open {
 .clothes-file-input,
 .kitchen-ingredient-file-input {
   display: none !important;
+}
+
+/* 共用：上传区与缩略图预览（被 ClothesItem / GoodsItem / KitchenDish / KitchenIngredient / AlbumPhoto 等多个模块复用） */
+.clothes-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.clothes-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clothes-preview img {
+  width: 88px;
+  height: 88px;
+  max-width: 88px;
+  max-height: 88px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--parchment);
+  display: block;
+}
+
+.clothes-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 /* 厨房管理 */

@@ -594,11 +594,30 @@ function emptyForm() {
   border-radius: 8px;
   cursor: pointer;
   border: 1px solid var(--parchment);
+  box-sizing: border-box;
 }
 
 .clothes-no-image {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--ink-ghost);
   font-size: 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--linen);
+  box-sizing: border-box;
+}
+
+.kitchen-dish-page :deep(.admin-table td),
+.kitchen-dish-page :deep(.admin-table th) {
+  white-space: nowrap;
+}
+
+.kitchen-dish-page :deep(.admin-table td) {
+  height: 64px;
+  vertical-align: middle;
 }
 
 .kitchen-mobile-page {

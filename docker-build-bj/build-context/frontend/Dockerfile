@@ -1,0 +1,8 @@
+# Default mirror for regions where Docker Hub is slow or unreachable.
+ARG BASE_IMAGE=docker.m.daocloud.io/library/nginx:1.27-alpine
+FROM ${BASE_IMAGE}
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY dist/ /usr/share/nginx/html/
+
+EXPOSE 80

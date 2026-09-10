@@ -89,16 +89,16 @@
         <div class="asset-form-body">
           <div class="form-grid">
             <label>
-              <span>食材名称</span>
+              <span>食材名称 <em class="required-mark">*</em></span>
               <input v-model.trim="form.ingredientName" placeholder="例如：鸡蛋" />
             </label>
             <label>
-              <span>生产日期</span>
+              <span>生产日期 <em class="required-mark">*</em></span>
               <input v-model="form.productionDate" type="date" />
             </label>
             <label>
-              <span>保质期（月）</span>
-              <input v-model.number="form.shelfLifeMonths" type="number" step="1" placeholder="选填，如 12" />
+              <span>保质期（月） <em class="required-mark">*</em></span>
+              <input v-model.number="form.shelfLifeMonths" type="number" step="1" placeholder="例如：12" />
             </label>
             <label class="wide">
               <span>食材图片</span>
@@ -124,7 +124,7 @@
             </label>
             <label class="wide">
               <span>备注</span>
-              <textarea v-model.trim="form.remark" rows="3"></textarea>
+              <textarea v-model.trim="form.remark" rows="3" placeholder="选填"></textarea>
             </label>
           </div>
         </div>
@@ -180,10 +180,10 @@ export default {
         { key: 'actions', label: '操作', width: 150, slot: 'actions' }
       ],
       mobileColumns: [
-        { key: 'ingredient_name', label: '食材名称', width: 96 },
-        { key: 'production_date', label: '生产日期', width: 108, slot: 'production_date' },
-        { key: 'shelf_life_months', label: '保质期(月)', width: 88 },
-        { key: 'expire_date', label: '过期日期', width: 108, slot: 'expire_date' }
+        { key: 'ingredient_name', label: '食材名称', width: 72 },
+        { key: 'production_date', label: '生产日期', width: 100, slot: 'production_date' },
+        { key: 'image', label: '图片', width: 56, slot: 'image' },
+        { key: 'expire_date', label: '过期日期', width: 100, slot: 'expire_date' }
       ]
     }
   },
@@ -340,6 +340,18 @@ export default {
       const payload = this.buildPayload()
       if (!payload.ingredientName) {
         window.alert('请输入食材名称')
+        return
+      }
+      if (!payload.productionDate) {
+        window.alert('请选择生产日期')
+        return
+      }
+      if (!payload.shelfLifeMonths) {
+        window.alert('请输入保质期（月）')
+        return
+      }
+      if (payload.shelfLifeMonths <= 0) {
+        window.alert('保质期必须大于 0')
         return
       }
       this.saving = true
@@ -507,5 +519,36 @@ function normalizeIngredientRow(row) {
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid var(--parchment);
+  box-sizing: border-box;
+}
+
+.kitchen-ingredient-page :deep(.clothes-no-image) {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-ghost);
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--linen);
+  box-sizing: border-box;
+}
+
+.required-mark {
+  color: #d93025;
+  font-style: normal;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.kitchen-ingredient-page :deep(.admin-table td),
+.kitchen-ingredient-page :deep(.admin-table th) {
+  white-space: nowrap;
+}
+
+.kitchen-ingredient-page :deep(.admin-table td) {
+  height: 64px;
+  vertical-align: middle;
 }
 </style>

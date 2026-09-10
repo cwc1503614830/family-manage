@@ -1,5 +1,5 @@
 import { http, unwrap } from './http'
-import { compressImage } from '../utils/imageCompress'
+import { compressImage } from '../utils/compressImage'
 
 export async function uploadFile(file, folder = 'clothes') {
   const compressed = await compressImage(file)
