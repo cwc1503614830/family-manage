@@ -21,7 +21,7 @@ if "%HARBOR_PROJECT%"=="" set "HARBOR_PROJECT=family-manage"
 set "BACKEND_IMAGE=family-manage-backend"
 set "FRONTEND_IMAGE=family-manage-frontend"
 
-set "HARBOR_HOST=192.168.236.129:80"
+set "HARBOR_HOST=192.168.216.140:8091"
 if not "%HARBOR_HOST_OVERRIDE%"=="" set "HARBOR_HOST=%HARBOR_HOST_OVERRIDE%"
 
 set "HARBOR_USER=admin"
@@ -58,7 +58,7 @@ echo           %REMOTE_FRONTEND%:%TAG%
 echo ============================================================
 echo.
 echo NOTE: HTTP Harbor requires insecure-registries in Docker Desktop:
-echo   "insecure-registries": ["192.168.236.129:80"]
+echo   "insecure-registries": ["192.168.216.140:8091"]
 echo   Login/push must use host with port: %HARBOR_HOST%
 echo.
 

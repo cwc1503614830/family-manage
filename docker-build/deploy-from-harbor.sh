@@ -35,11 +35,11 @@ NETWORK_NAME="${NETWORK_NAME:-family-manage-net}"
 BACKEND_NAME="${BACKEND_NAME:-family-manage-backend}"
 FRONTEND_NAME="${FRONTEND_NAME:-family-manage-frontend}"
 BACKEND_PORT="${BACKEND_PORT:-12300}"
-# NOTE: Container nginx listens on 8091 (see nginx.conf `listen 8091` + Dockerfile.frontend EXPOSE 8091).
-#       FRONTEND_PORT below is the HOST-facing port; FRONTEND_CONTAINER_PORT must match nginx listen.
-#       Both default to 8091 so there is zero confusion with Harbor's HTTP port 80 on the host.
-FRONTEND_PORT="${FRONTEND_PORT:-8091}"
-FRONTEND_CONTAINER_PORT=8091
+# NOTE: Container nginx listens on 80 (see nginx.conf `listen 80`).
+#       FRONTEND_PORT below is the HOST-facing port.
+#       Container nginx default is 80 so FRONTEND_CONTAINER_PORT=80.
+FRONTEND_PORT="${FRONTEND_PORT:-8080}"
+FRONTEND_CONTAINER_PORT=80
 SPRING_PROFILE="${SPRING_PROFILE:-prd}"
 
 REMOTE_BACKEND="${HARBOR_HOST}/${HARBOR_PROJECT}/family-manage-backend:${TAG}"
