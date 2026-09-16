@@ -156,6 +156,11 @@
         </div>
       </form>
     </div>
+
+    <div v-if="previewUrl" class="modal-mask album-preview-mask" @click="previewUrl = ''">
+      <button class="album-preview-close" @click.stop="previewUrl = ''">✕</button>
+      <img :src="previewUrl" alt="预览" class="album-preview-image" @click.stop />
+    </div>
   </div>
 </template>
 
@@ -188,6 +193,7 @@ export default {
       uploadError: '',
       form: emptyForm(),
       selectedIds: [],
+      previewUrl: '',
       isMobile: false,
       mobileBreakpoint: null,
       columns: [
@@ -239,6 +245,19 @@ export default {
     }
     this.teardownMobileFormViewport()
     document.body.classList.remove('modal-open', 'clothes-modal-open')
+  },
+  mounted() {
+    this._onKeydown = (e) => {
+      if (e.key === 'Escape' && this.previewUrl) {
+        this.previewUrl = ''
+      }
+    }
+    window.addEventListener('keydown', this._onKeydown)
+  },
+  beforeUnmount() {
+    if (this._onKeydown) {
+      window.removeEventListener('keydown', this._onKeydown)
+    }
   },
   methods: {
     setupMobileListener() {
@@ -454,7 +473,7 @@ export default {
     },
     previewImage(url) {
       if (url) {
-        window.open(url, '_blank')
+        this.previewUrl = url
       }
     },
     isSelected(id) {
