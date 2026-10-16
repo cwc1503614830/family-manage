@@ -51,7 +51,7 @@ echo Root:     %ROOT_DIR%
 echo Tag:      %TAG%
 echo Mirror:   %DOCKER_MIRROR%
 echo Backend:  %BACKEND_BASE%
-echo Frontend: %FRONTEND_BASE%
+echo Frontend: %FRONTEND_BASE%un
 echo Harbor:   %HARBOR_HOST%/%HARBOR_PROJECT%
 echo Remote:   %REMOTE_BACKEND%:%TAG%
 echo           %REMOTE_FRONTEND%:%TAG%
