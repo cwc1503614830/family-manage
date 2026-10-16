@@ -40,7 +40,7 @@
       </template>
       <template #image="{ row }">
         <div class="clothes-image-cell">
-          <img v-if="row.image_url" :src="row.image_url" alt="物品图片" class="clothes-thumb" />
+          <img v-if="row.image_url" :src="row.image_url" alt="物品图片" class="clothes-thumb" @click.stop="previewImage(row.image_url)" />
           <span v-else class="clothes-no-image">无</span>
         </div>
       </template>
@@ -117,7 +117,7 @@
             <span>物品图片</span>
             <div class="goods-upload">
               <div v-if="form.imageUrl" class="goods-preview">
-                <img :src="form.imageUrl" alt="预览图" />
+                <img :src="form.imageUrl" alt="预览图" @click.stop="previewImage(form.imageUrl)" />
                 <button class="ghost-btn mini" type="button" @click="clearImage">移除</button>
               </div>
               <div class="goods-upload-actions">
@@ -147,6 +147,11 @@
           </button>
         </div>
       </form>
+    </div>
+
+    <div v-if="previewUrl" class="modal-mask album-preview-mask" @click="previewUrl = ''">
+      <button class="album-preview-close" @click.stop="previewUrl = ''">✕</button>
+      <img :src="previewUrl" alt="预览" class="album-preview-image" @click.stop />
     </div>
   </section>
 </template>
@@ -179,6 +184,7 @@ export default {
       uploading: false,
       uploadError: '',
       selectedIds: [],
+      previewUrl: '',
       form: emptyForm(),
       isMobile: false,
       mobileBreakpoint: null,
@@ -226,6 +232,19 @@ export default {
   beforeDestroy() {
     if (this.mobileBreakpoint) {
       this.mobileBreakpoint.removeEventListener('change', this.syncMobileState)
+    }
+  },
+  mounted() {
+    this._onKeydown = (e) => {
+      if (e.key === 'Escape' && this.previewUrl) {
+        this.previewUrl = ''
+      }
+    }
+    window.addEventListener('keydown', this._onKeydown)
+  },
+  beforeUnmount() {
+    if (this._onKeydown) {
+      window.removeEventListener('keydown', this._onKeydown)
     }
   },
   methods: {
@@ -371,6 +390,11 @@ export default {
     clearImage() {
       this.form.imageUrl = ''
       this.uploadError = ''
+    },
+    previewImage(url) {
+      if (url) {
+        this.previewUrl = url
+      }
     },
     isSelected(id) {
       return this.selectedIds.includes(id)
