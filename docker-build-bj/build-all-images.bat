@@ -18,10 +18,12 @@ if "%TAG%"=="" set "TAG=latest"
 set "HARBOR_PROJECT=%~2"
 if "%HARBOR_PROJECT%"=="" set "HARBOR_PROJECT=family-manage"
 
-set "BACKEND_IMAGE=family-manage-backend"
-set "FRONTEND_IMAGE=family-manage-frontend"
+rem UAT stack uses its own repository names so images never overwrite the prd ones
+rem (prd stack in ..\docker-build pushes family-manage-backend / family-manage-frontend).
+set "BACKEND_IMAGE=family-manage-uat-backend"
+set "FRONTEND_IMAGE=family-manage-uat-frontend"
 
-set "HARBOR_HOST=192.168.216.140:8091"
+set "HARBOR_HOST=192.168.236.129:80"
 if not "%HARBOR_HOST_OVERRIDE%"=="" set "HARBOR_HOST=%HARBOR_HOST_OVERRIDE%"
 
 set "HARBOR_USER=admin"
@@ -30,8 +32,8 @@ if not "%HARBOR_USER_OVERRIDE%"=="" set "HARBOR_USER=%HARBOR_USER_OVERRIDE%"
 set "HARBOR_PASS=Harbor12345"
 if not "%HARBOR_PASS_OVERRIDE%"=="" set "HARBOR_PASS=%HARBOR_PASS_OVERRIDE%"
 
-set "REMOTE_BACKEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-backend"
-set "REMOTE_FRONTEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-frontend"
+set "REMOTE_BACKEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-uat-backend"
+set "REMOTE_FRONTEND=%HARBOR_HOST%/%HARBOR_PROJECT%/family-manage-uat-frontend"
 
 rem Default mirror: docker.1ms.run (verified by test-mirrors.bat on this network)
 rem Switch mirror: set DOCKER_MIRROR=docker.m.daocloud.io
@@ -46,7 +48,7 @@ if "%DOCKER_MIRROR%"=="" (
 
 echo.
 echo ============================================================
-echo Family Manage - Build and Push to Harbor
+echo Family Manage UAT - Build and Push to Harbor
 echo Root:     %ROOT_DIR%
 echo Tag:      %TAG%
 echo Mirror:   %DOCKER_MIRROR%
@@ -55,10 +57,11 @@ echo Frontend: %FRONTEND_BASE%
 echo Harbor:   %HARBOR_HOST%/%HARBOR_PROJECT%
 echo Remote:   %REMOTE_BACKEND%:%TAG%
 echo           %REMOTE_FRONTEND%:%TAG%
+echo Profile:  uat (application-uat.properties)
 echo ============================================================
 echo.
 echo NOTE: HTTP Harbor requires insecure-registries in Docker Desktop:
-echo   "insecure-registries": ["192.168.216.140:8091"]
+echo   "insecure-registries": ["192.168.236.129:80"]
 echo   Login/push must use host with port: %HARBOR_HOST%
 echo.
 
@@ -201,9 +204,13 @@ echo [OK] Build and push completed:
 echo   %REMOTE_BACKEND%:%TAG%
 echo   %REMOTE_FRONTEND%:%TAG%
 echo.
-echo On Linux server, run:
+echo On Linux server (same host as prd stack), run:
 echo   chmod +x deploy-from-harbor.sh
 echo   ./deploy-from-harbor.sh %TAG% %HARBOR_PROJECT%
+echo.
+echo UAT ports (do not clash with prd stack on the same server):
+echo   Frontend  host 8092 -^> container 8091   (prd stack owns host 8091)
+echo   Backend   host 12301 -^> container 12300  (prd stack owns host 12300)
 echo.
 echo Done. Press any key to close...
 pause >nul
@@ -266,6 +273,13 @@ echo Defaults:
 echo   tag            latest
 echo   harbor-project family-manage
 echo.
+echo UAT stack identity (differs from the prd stack in ..\docker-build):
+echo   images         family-manage-uat-backend / family-manage-uat-frontend
+echo   spring profile uat  (application-uat.properties)
+echo   containers     family-manage-uat-backend / family-manage-uat-frontend
+echo   network        family-manage-uat-net
+echo   host ports     frontend 8092 (container 8091), backend 12301 (container 12300)
+echo.
 echo Environment overrides:
 echo   DOCKER_MIRROR, HARBOR_HOST_OVERRIDE, HARBOR_USER_OVERRIDE, HARBOR_PASS_OVERRIDE
 echo.
@@ -284,5 +298,5 @@ echo Examples:
 echo   build-all-images.bat v1.0.0 family-manage
 echo   set DOCKER_MIRROR=docker.m.daocloud.io ^&^& build-all-images.bat
 echo.
-echo Before building, you can run test-mirrors.bat to find the fastest mirror.
+echo Before building, run test-mirrors.bat in ..\docker-build to find the fastest mirror.
 exit /b 0
