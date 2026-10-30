@@ -1,12 +1,19 @@
-# Default mirror for regions where Docker Hub is slow or unreachable.
+# 默认镜像源（Docker Hub 在部分网络不可达时改用国内镜像源，可通过 --build-arg BASE_IMAGE 覆盖）
 ARG BASE_IMAGE=docker.m.daocloud.io/library/eclipse-temurin:8-jre
 FROM ${BASE_IMAGE}
 
 WORKDIR /app
 COPY app.jar /app/app.jar
 
-ENV SPRING_PROFILES_ACTIVE=prd
+# 镜像不绑定环境：prd / uat / dev 三套环境共用同一个 jar（jar 内已打包
+# application-prd.properties / application-uat.properties / application-dev.properties），
+# 运行期由部署脚本传 -e SPRING_PROFILES_ACTIVE=<env> 选择。
+# 这里的 ARG 只是缺省值，方便不进容器直接调试时使用。
+ARG PROFILE=prd
+ENV SPRING_PROFILES_ACTIVE=${PROFILE}
 
+# 容器内端口三套环境统一为 12300，宿主机 publish 端口由部署脚本决定
+# prd 12300 / uat 12301 / dev 12302
 EXPOSE 12300
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

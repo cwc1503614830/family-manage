@@ -1,13 +1,29 @@
-
+﻿
 ============================================================
-Family Manage Docker image build
-Root:     e:\project\family-manage
+Family Manage - Build and Push to Harbor
+Root:     E:\project\family-manage
 Tag:      latest
-Backend:  family-manage-backend:latest
-Frontend: family-manage-frontend:latest
+Mirror:   docker.1ms.run
+Backend:  docker.1ms.run/library/eclipse-temurin:8-jre
+Frontend: docker.1ms.run/library/nginx:1.27-alpine
+Harbor:   192.168.236.129:80/family-manage
+
+One build serves ALL environments (prd / uat / dev):
+  same backend jar (contains application-prd/uat/dev.properties)
+  same frontend dist (backend upstream injected by deploy script)
+  differences (profile / ports / container names) come from the deploy scripts
+Remote:   192.168.236.129:80/family-manage/family-manage-backend:latest
+          192.168.236.129:80/family-manage/family-manage-frontend:latest
 ============================================================
 
-[1/5] Building backend jar...
+NOTE: HTTP Harbor requires insecure-registries in Docker Desktop:
+  "insecure-registries": ["192.168.236.129:80"]
+  Login/push must use host with port: 192.168.236.129:80
+
+[1/10] Pre-pulling base images (with mirror fallback)...
+      [SKIP] eclipse-temurin:8-jre already exists locally, tagged as docker.1ms.run/library/eclipse-temurin:8-jre
+      [SKIP] nginx:1.27-alpine already exists locally, tagged as docker.1ms.run/library/nginx:1.27-alpine
+[2/10] Building backend jar...
       (first run may download Maven dependencies, please wait...)
 [INFO] Scanning for projects...
 [INFO] 
@@ -19,17 +35,16 @@ Frontend: family-manage-frontend:latest
 [INFO] --- resources:3.2.0:resources (default-resources) @ family-manage-backend ---
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
 [INFO] Using 'UTF-8' encoding to copy filtered properties files.
-[INFO] Copying 3 resources
-[INFO] Copying 3 resources
+[INFO] Copying 4 resources
+[INFO] Copying 8 resources
 [INFO] 
 [INFO] --- compiler:3.10.1:compile (default-compile) @ family-manage-backend ---
-[INFO] Changes detected - recompiling the module!
-[INFO] Compiling 47 source files to e:\project\family-manage\family-manage-backend\target\classes
+[INFO] Nothing to compile - all classes are up to date
 [INFO] 
 [INFO] --- resources:3.2.0:testResources (default-testResources) @ family-manage-backend ---
 [INFO] Using 'UTF-8' encoding to copy filtered resources.
 [INFO] Using 'UTF-8' encoding to copy filtered properties files.
-[INFO] skip non existing resourceDirectory e:\project\family-manage\family-manage-backend\src\test\resources
+[INFO] skip non existing resourceDirectory E:\project\family-manage\family-manage-backend\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.10.1:testCompile (default-testCompile) @ family-manage-backend ---
 [INFO] No sources to compile
@@ -38,117 +53,151 @@ Frontend: family-manage-frontend:latest
 [INFO] Tests are skipped.
 [INFO] 
 [INFO] --- jar:3.2.2:jar (default-jar) @ family-manage-backend ---
-[INFO] Building jar: e:\project\family-manage\family-manage-backend\target\family-manage-backend-1.0.0.jar
 [INFO] 
 [INFO] --- spring-boot:2.7.18:repackage (repackage) @ family-manage-backend ---
 [INFO] Replacing main artifact with repackaged archive
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  3.180 s
-[INFO] Finished at: 2026-05-31T16:47:22+08:00
+[INFO] Total time:  4.260 s
+[INFO] Finished at: 2026-10-29T17:09:48+08:00
 [INFO] ------------------------------------------------------------------------
-[2/5] Building frontend dist...
+[3/10] Building frontend dist...
 
 > family-manage-frontend@1.0.0 build
 > vite build
 
-vite v4.5.14 building for production...
+[36mvite v4.5.14 [32mbuilding for production...[36m[39m
 transforming...
-✓ 81 modules transformed.
+[32m✓[39m 101 modules transformed.
 rendering chunks...
 computing gzip size...
-dist/index.html                   0.74 kB │ gzip:  0.44 kB
-dist/assets/index-b6b70120.css   29.46 kB │ gzip:  6.50 kB
-dist/assets/index-9d82d2c2.js   206.22 kB │ gzip: 60.74 kB
-✓ built in 1.05s
-[3/5] Preparing Docker build context...
-[4/5] Building backend image...
-      Base image: docker.m.daocloud.io/library/eclipse-temurin:8-jre
-#0 building with "desktop-linux" instance using docker driver
+[2mdist/[22m[32mindex.html                 [39m[1m[2m  0.74 kB[22m[1m[22m[2m │ gzip:  0.44 kB[22m
+[2mdist/[22m[35massets/index-f427f1e5.css  [39m[1m[2m 66.39 kB[22m[1m[22m[2m │ gzip: 11.45 kB[22m
+[2mdist/[22m[36massets/index-2a19a9d0.js   [39m[1m[2m296.15 kB[22m[1m[22m[2m │ gzip: 77.13 kB[22m
+[32m✓ built in 1.61s[39m
+[4/10] Preparing Docker build context...
+[5/10] Building backend image...
+      Base image: docker.1ms.run/library/eclipse-temurin:8-jre
+.\build-all-images.bat : DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+At line:16 char:1
++ .\build-all-images.bat > build-log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (DEPRECATED: The...future release.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
 
-#1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 303B done
-#1 DONE 0.0s
+Sending build context to Docker daemon  52.71MB
 
-#2 [internal] load metadata for docker.m.daocloud.io/library/eclipse-temurin:8-jre
-#2 DONE 0.0s
+Step 1/8 : ARG BASE_IMAGE=docker.m.daocloud.io/library/eclipse-temurin:8-jre
+Step 2/8 : FROM ${BASE_IMAGE}
+ ---> e8950bfdf2ba
+Step 3/8 : WORKDIR /app
+ ---> Using cache
+ ---> 3230fd17f8d1
+Step 4/8 : COPY app.jar /app/app.jar
+ ---> Using cache
+ ---> 742668449caf
+Step 5/8 : ARG PROFILE=prd
+ ---> Running in 306a5c8b8a5b
+ ---> Removed intermediate container 306a5c8b8a5b
+ ---> 85717da8ef4c
+Step 6/8 : ENV SPRING_PROFILES_ACTIVE=${PROFILE}
+ ---> Running in 9d242981130f
+ ---> Removed intermediate container 9d242981130f
+ ---> 26475e4e15d0
+Step 7/8 : EXPOSE 12300
+ ---> Running in cb9682860327
+ ---> Removed intermediate container cb9682860327
+ ---> 685291b0db7d
+Step 8/8 : ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ ---> Running in daea3312ec7d
+ ---> Removed intermediate container daea3312ec7d
+ ---> be5827c98943
+Successfully built be5827c98943
+Successfully tagged family-manage-backend:latest
+[6/10] Building frontend image...
+      Base image: docker.1ms.run/library/nginx:1.27-alpine
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            BuildKit is currently disabled; enable it by removing the DOCKER_BUILDKIT=0
+            environment-variable.
 
-#3 [internal] load .dockerignore
-#3 transferring context: 2B done
-#3 DONE 0.0s
+Sending build context to Docker daemon  377.3kB
 
-#4 [1/3] FROM docker.m.daocloud.io/library/eclipse-temurin:8-jre@sha256:1ef686a85b239b143271093e286c27c6659051ba6b1c327e3a056742b13889a5
-#4 resolve docker.m.daocloud.io/library/eclipse-temurin:8-jre@sha256:1ef686a85b239b143271093e286c27c6659051ba6b1c327e3a056742b13889a5 0.0s done
-#4 DONE 0.0s
+Step 1/6 : ARG BASE_IMAGE=docker.m.daocloud.io/library/nginx:1.27-alpine
+Step 2/6 : FROM ${BASE_IMAGE}
+ ---> 65645c7bb6a0
+Step 3/6 : COPY dist/ /usr/share/nginx/html/
+ ---> 1180deadeb08
+Step 4/6 : COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+ ---> 024a611da538
+Step 5/6 : ENV BACKEND_HOST=family-manage-backend
+ ---> Running in 47a98c424b38
+ ---> Removed intermediate container 47a98c424b38
+ ---> cecc5c1d4a5d
+Step 6/6 : EXPOSE 8091
+ ---> Running in a172ceb5b822
+ ---> Removed intermediate container a172ceb5b822
+ ---> a36192fbb304
+Successfully built a36192fbb304
+Successfully tagged family-manage-frontend:latest
+[7/10] Logging in to Harbor...
+Login Succeeded
+[8/10] Tagging images for Harbor...
+[9/10] Pushing backend image...
+The push refers to repository [192.168.236.129:80/family-manage/family-manage-backend]
+f583bc940d7f: Waiting
+f3db1cd94078: Waiting
+06e9d71331fb: Waiting
+35ad138a2648: Waiting
+378e388e8899: Waiting
+43e216d6bac2: Waiting
+b5afb60bea76: Waiting
+1990a4c73b27: Waiting
+378e388e8899: Layer already exists
+43e216d6bac2: Layer already exists
+b5afb60bea76: Layer already exists
+1990a4c73b27: Waiting
+f583bc940d7f: Layer already exists
+f3db1cd94078: Layer already exists
+06e9d71331fb: Layer already exists
+35ad138a2648: Layer already exists
+1990a4c73b27: Mounted from family-manage/family-manage-uat-backend
+latest: digest: sha256:be5827c9894333538205c07877ec8a51db1aba6af1ad8cbff57d81deaeb6035f size: 2051
+[10/10] Pushing frontend image...
+The push refers to repository [192.168.236.129:80/family-manage/family-manage-frontend]
+2fe0830159a2: Waiting
+d7e507024086: Waiting
+f18232174bc9: Waiting
+40933ada2623: Waiting
+b464cfdf2a63: Waiting
+197eb75867ef: Waiting
+61ca4f733c80: Waiting
+34a64644b756: Waiting
+39c2ddfd6010: Waiting
+81bd8ed7ec67: Waiting
+f18232174bc9: Layer already exists
+40933ada2623: Pushed
+b464cfdf2a63: Layer already exists
+197eb75867ef: Layer already exists
+61ca4f733c80: Layer already exists
+34a64644b756: Layer already exists
+39c2ddfd6010: Layer already exists
+81bd8ed7ec67: Layer already exists
+2fe0830159a2: Pushed
+d7e507024086: Layer already exists
+latest: digest: sha256:a36192fbb304c76038c53a00b733e44f9acd22e3796d6794ef3af197840eb312 size: 2483
 
-#5 [internal] load build context
-#5 transferring context: 52.66MB 3.9s done
-#5 DONE 3.9s
+[OK] Build and push completed:
+  192.168.236.129:80/family-manage/family-manage-backend:latest
+  192.168.236.129:80/family-manage/family-manage-frontend:latest
 
-#6 [2/3] WORKDIR /app
-#6 CACHED
+On Linux server (192.168.236.129), pick the environment you want to update:
+  cd /data/project/family-manage/docker-build
+  ./deploy-prd-from-harbor.sh latest      (prd: internal,  ports 8091 / 12300)
+  ./deploy-uat-from-harbor.sh latest      (uat: external,  ports 8092 / 12301)
+  ./deploy-dev-from-harbor.sh latest      (dev: internal,  ports 8093 / 12302)
 
-#7 [3/3] COPY app.jar /app/app.jar
-#7 DONE 0.1s
-
-#8 exporting to image
-#8 exporting layers
-#8 exporting layers 1.4s done
-#8 exporting manifest sha256:ab1c0b3e74a730e8b9cbc84d1768200ea3e28a31b98510ba1878d631daef5162 0.0s done
-#8 exporting config sha256:d28deddc7f04b71b7747db7538cc58971086fb100f504bafaf15a44916edbdfd done
-#8 exporting attestation manifest sha256:bf4f73c86a757dfdc7dea48d578cef823b0768562b2c742323e7508ac3002a24 0.0s done
-#8 exporting manifest list sha256:22e3394bc5ff20f572253e608f0808684fb49d4dfdb6fdc1e641daf45ed219bf 0.0s done
-#8 naming to docker.io/library/family-manage-backend:latest done
-#8 unpacking to docker.io/library/family-manage-backend:latest
-#8 unpacking to docker.io/library/family-manage-backend:latest 0.2s done
-#8 DONE 1.7s
-[5/5] Building frontend image...
-      Base image: docker.m.daocloud.io/library/nginx:1.27-alpine
-#0 building with "desktop-linux" instance using docker driver
-
-#1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 291B done
-#1 DONE 0.0s
-
-#2 [internal] load metadata for docker.m.daocloud.io/library/nginx:1.27-alpine
-#2 DONE 0.0s
-
-#3 [internal] load .dockerignore
-#3 transferring context: 2B done
-#3 DONE 0.0s
-
-#4 [1/3] FROM docker.m.daocloud.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
-#4 resolve docker.m.daocloud.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10 0.0s done
-#4 DONE 0.0s
-
-#5 [internal] load build context
-#5 transferring context: 240.21kB 0.0s done
-#5 DONE 0.0s
-
-#6 [2/3] COPY nginx.conf /etc/nginx/conf.d/default.conf
-#6 CACHED
-
-#7 [3/3] COPY dist/ /usr/share/nginx/html/
-#7 CACHED
-
-#8 exporting to image
-#8 exporting layers done
-#8 exporting manifest sha256:6d6de17d5387268850c898244831462ea04a39abe2bbb22b11b550068f1cf8f1 done
-#8 exporting config sha256:9274765e6953af355ada762de833d56c300253fe5386db217c90bf98855c30b1 done
-#8 exporting attestation manifest sha256:59df8e105d114edda8353647c0ca30ff6b4f9a1802706c6b8b97d113c74dac14
-#8 exporting attestation manifest sha256:59df8e105d114edda8353647c0ca30ff6b4f9a1802706c6b8b97d113c74dac14 0.0s done
-#8 exporting manifest list sha256:15914db9862998de1965e40b176f3b484967b4229f2d2b3776724bd78fcecdec 0.0s done
-#8 naming to docker.io/library/family-manage-frontend:latest done
-#8 unpacking to docker.io/library/family-manage-frontend:latest 0.0s done
-#8 DONE 0.1s
-
-[OK] Images built successfully:
-  family-manage-backend:latest
-  family-manage-frontend:latest
-
-Example run:
-  docker network create family-manage-net
-  docker run -d --name family-manage-backend --network family-manage-net -p 12300:12300 family-manage-backend:latest
-  docker run -d --name family-manage-frontend --network family-manage-net -p 8080:80 family-manage-frontend:latest
-
+Done.

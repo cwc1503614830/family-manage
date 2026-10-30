@@ -51,8 +51,13 @@ echo Root:     %ROOT_DIR%
 echo Tag:      %TAG%
 echo Mirror:   %DOCKER_MIRROR%
 echo Backend:  %BACKEND_BASE%
-echo Frontend: %FRONTEND_BASE%un
+echo Frontend: %FRONTEND_BASE%
 echo Harbor:   %HARBOR_HOST%/%HARBOR_PROJECT%
+echo.
+echo One build serves ALL environments (prd / uat / dev):
+echo   same backend jar ^(contains application-prd/uat/dev.properties^)
+echo   same frontend dist ^(backend upstream injected by deploy script^)
+echo   differences ^(profile / ports / container names^) come from the deploy scripts
 echo Remote:   %REMOTE_BACKEND%:%TAG%
 echo           %REMOTE_FRONTEND%:%TAG%
 echo ============================================================
@@ -148,7 +153,8 @@ copy /y "%SCRIPT_DIR%Dockerfile.backend" "%BUILD_CONTEXT_DIR%\backend\Dockerfile
 
 xcopy "%FRONTEND_DIR%\dist" "%BUILD_CONTEXT_DIR%\frontend\dist\" /e /i /y >nul
 copy /y "%SCRIPT_DIR%Dockerfile.frontend" "%BUILD_CONTEXT_DIR%\frontend\Dockerfile" >nul
-copy /y "%SCRIPT_DIR%nginx.conf" "%BUILD_CONTEXT_DIR%\frontend\nginx.conf" >nul
+rem nginx 模板由容器启动时 envsubst 渲染，后端容器名按环境注入（见 Dockerfile.frontend）
+copy /y "%SCRIPT_DIR%nginx.conf.template" "%BUILD_CONTEXT_DIR%\frontend\nginx.conf.template" >nul
 
 echo [5/10] Building backend image...
 echo       Base image: %BACKEND_BASE%
@@ -201,12 +207,15 @@ echo [OK] Build and push completed:
 echo   %REMOTE_BACKEND%:%TAG%
 echo   %REMOTE_FRONTEND%:%TAG%
 echo.
-echo On Linux server, run:
-echo   chmod +x deploy-from-harbor.sh
-echo   ./deploy-from-harbor.sh %TAG% %HARBOR_PROJECT%
+echo On Linux server (192.168.236.129), pick the environment you want to update:
+echo   cd /data/project/family-manage/docker-build
+echo   ./deploy-prd-from-harbor.sh %TAG%      ^(prd: internal,  ports 8091 / 12300^)
+echo   ./deploy-uat-from-harbor.sh %TAG%      ^(uat: external,  ports 8092 / 12301^)
+echo   ./deploy-dev-from-harbor.sh %TAG%      ^(dev: internal,  ports 8093 / 12302^)
 echo.
-echo Done. Press any key to close...
-pause >nul
+echo Done.
+rem 自动化/CI 场景可不按任意键退出：set NO_PAUSE=1
+if not defined NO_PAUSE pause >nul
 exit /b 0
 
 :pull_base
@@ -254,8 +263,8 @@ exit /b 1
 
 :fail
 echo.
-echo Build or push failed. Press any key to close...
-pause >nul
+echo Build or push failed.
+if not defined NO_PAUSE pause >nul
 exit /b 1
 
 :help

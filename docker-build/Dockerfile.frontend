@@ -1,8 +1,18 @@
-# Default mirror for regions where Docker Hub is slow or unreachable.
+# 默认镜像源，可通过 --build-arg BASE_IMAGE 覆盖
 ARG BASE_IMAGE=docker.m.daocloud.io/library/nginx:1.27-alpine
 FROM ${BASE_IMAGE}
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY dist/ /usr/share/nginx/html/
 
+# 放到 nginx 官方镜像的模板目录：容器启动时
+# /docker-entrypoint.d/20-envsubst-on-templates.sh 会把 ${BACKEND_HOST} 替换成实际后端容器名，
+# 并输出到 /etc/nginx/conf.d/default.conf。
+# 这样同一个前端镜像可以被 prd / uat / dev 共用，只要部署时传不同的 -e BACKEND_HOST。
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# 缺省后端容器名（部署脚本总会显式覆盖），避免漏传时 nginx 因找不到 upstream 而启动失败
+ENV BACKEND_HOST=family-manage-backend
+
+# 容器内 nginx 端口三套环境统一为 8091，宿主机 publish 端口由部署脚本决定
+# prd 8091 / uat 8092 / dev 8093
 EXPOSE 8091
